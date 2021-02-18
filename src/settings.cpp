@@ -84,7 +84,11 @@ void Settings::parseOptions(int argc, char** argv){
 }
 
 std::string Settings::generateArchiveName(){
-  return "";
+  char name[11];
+  for(int x = 0; x < 10; x++){
+    name[x] = (rand()%26)+97;
+  }
+  return name;
 }
 
 Settings::Mode Settings::parseMode(const auto& parseResult){
