@@ -1,0 +1,4 @@
+[submodule "libs/cxxopts"]
+	path = libs/cxxopts
+	url = https://github.com/jarro2783/cxxopts.git
+	branch = tag/v2.2.1
