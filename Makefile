@@ -31,5 +31,7 @@ $(BUILD_DIR)/%.cpp.o: %.cpp
 
 .PHONY: clean
 
+-include $(DEPS)
+
 clean:
 	$(RM) -r $(BUILD_DIR)
