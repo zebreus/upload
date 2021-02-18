@@ -2,16 +2,17 @@
 #define SETTINGS_HPP
 
 #include <cxxopts.hpp>
+#include <iostream>
 #include <string>
 #include <vector>
+#include "quit.hpp"
 
 class Settings{
 public:
   enum Mode{
     Individual,
     Archive,
-    List,
-    Help
+    List
   };
   enum VerbosityLevel{
     Silent,
@@ -29,7 +30,6 @@ public:
   };
   
 private:
-
   Mode mode;
   VerbosityLevel verbosity;
   ArchiveType archiveType;
@@ -38,6 +38,10 @@ private:
   std::string archiveName;
   std::vector<std::string> requestedTargets;
   std::vector<std::string> files;
+  
+  static constexpr ArchiveType defaultArchiveType = ArchiveType::Zip;
+  static constexpr HttpsSetting defaultHttpsSetting = HttpsSetting::Allow;
+  static constexpr bool defaultPreserveName = false;
 
 public:
   Settings(int argc, char** argv);
@@ -49,6 +53,16 @@ public:
   std::string getArchiveName() const;
   std::vector<std::string> getRequestedTargets() const;
   std::vector<std::string> getFiles() const;
+
+private:
+  cxxopts::Options generateParser();
+  void parseOptions(int argc, char** argv);
+  std::string generateArchiveName();
+  Mode parseMode(const auto& parseResult);
+  VerbosityLevel parseVerbosity(const auto& parseResult);
+  ArchiveType parseArchiveType(const auto& parseResult);
+  HttpsSetting parseHttpsSetting(const auto& parseResult);
+  std::vector<std::string> parseFiles(const auto& parseResult, Settings::Mode mode);
 };
 
 #endif

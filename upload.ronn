@@ -36,7 +36,7 @@ In archive mode:
    Increase the verbosity of the output.
 
  * `-a`, `--archive` :
-   Compress all files and directories into an archive.
+   Pack all files and directories into an archive.
    Mutually exclusive with `-i`/`--individual`.
 
  * `-i`, `--individual` :
@@ -64,7 +64,7 @@ Target selection options. These options are used to select the target.
    If this option is used, the default order is discarded.
 
  * `-p`, `--preserve-name` :
-   Ensure, that the upload target preserves the filename.
+   Ensure, that the upload target preserves the filename. Some targets like to replace the filenames with random strings, this option excludes them.
 
  * `-s`, `--ssl` :
    Ensure, that the upload target uses https.
