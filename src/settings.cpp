@@ -40,6 +40,26 @@ bool Settings::getDirectoryArchive() const{
   return directoryArchive;
 }
 
+BackendFeatures Settings::getRequiredFeatures() const{
+  BackendFeatures requiredFeatures = BackendFeatures::None;
+  if(preserveName){
+    requiredFeatures = requiredFeatures | BackendFeatures::PreserveName;
+  }
+  
+  switch(httpsSetting){
+    case HttpsSetting::Forbid:
+      requiredFeatures = requiredFeatures | BackendFeatures::Http;
+      break;
+    case HttpsSetting::Force:
+      requiredFeatures = requiredFeatures | BackendFeatures::Https;
+      break;
+    default:
+      break;
+  }
+  
+  return requiredFeatures;
+}
+
 cxxopts::Options Settings::generateParser(){
   cxxopts::Options options("upload", "Upload files to the internet");
   options.add_options()

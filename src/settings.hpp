@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include "quit.hpp"
+#include "target.hpp"
 
 class Settings{
 public:
@@ -55,6 +56,7 @@ public:
   std::vector<std::string> getRequestedTargets() const;
   std::vector<std::string> getFiles() const;
   bool getDirectoryArchive() const;
+  BackendFeatures getRequiredFeatures() const;
 
 private:
   cxxopts::Options generateParser();
