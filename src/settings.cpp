@@ -36,6 +36,10 @@ std::vector<std::string> Settings::getFiles() const{
   return files;
 }
 
+bool Settings::getDirectoryArchive() const{
+  return directoryArchive;
+}
+
 cxxopts::Options Settings::generateParser(){
   cxxopts::Options options("upload", "Upload files to the internet");
   options.add_options()
@@ -46,7 +50,8 @@ cxxopts::Options Settings::generateParser(){
   ("i,individual", "Upload all files or directory individually")
   ("l,list", "List all available upload targets for the current request, ordered by preference")
   ("archive-type", "Sets the archive type", cxxopts::value<std::string>())
-  ("d,directory-in-archive", "Put the contents in the root of the archive", cxxopts::value<std::string>()->implicit_value("true"))
+  ("d,directory-archive", "Put the contents of directories in a directory in the archive.")
+  ("r,root-archive", "Put the contents of directories in the root of the archive.")
   ("t,target", "Add a specific target. If this option is used, the default order is discarded.", cxxopts::value<std::vector<std::string>>())
   ("p,preserve-name", "Ensure that the filenames are preserved.")
   ("s,ssl", "Ensure the use of https.")
@@ -65,7 +70,7 @@ void Settings::parseOptions(int argc, char** argv){
   
   if (result.count("help")){
     std::cout << options.help() << std::endl;
-    exit(0);
+    quit::success();
   }
   
   mode = parseMode(result);
@@ -78,6 +83,7 @@ void Settings::parseOptions(int argc, char** argv){
   }
   archiveName = result["name"].template as<std::string>();
   preserveName = result.count("preserve-name");
+  directoryArchive = parseDirectoryArchive(result, mode);
   }catch(std::exception e){
     quit::invalidCliUsage(e.what());
   }
@@ -160,10 +166,38 @@ std::vector<std::string> Settings::parseFiles(const auto& parseResult, Settings:
   bool filesRequired = ( mode == Mode::Archive || mode == Mode::Individual );
   if(parseResult.count("file") == 0){
     if(filesRequired){
-      quit::invalidCliUsage("You have to specify some files to upload. Just write them like 'upload FILE1 FILE2'");
+      quit::invalidCliUsage("You have to specify files to upload. Use upload like 'upload file.txt file2.txt'");
     }else{
       return {};
     }
   }
   return parseResult["file"].template as<std::vector<std::string>>();
+}
+
+bool Settings::parseDirectoryArchive(const auto& parseResult, Settings::Mode mode){
+  bool settingRequired = ( mode == Mode::Archive || mode == Mode::Individual );
+  if(settingRequired){
+    if(parseResult.count("root-archive") && parseResult.count("directory-archive")){
+      std::stringstream message;
+      message << "You cannot have root-archive and directory-archive. Based on your mode the recommended and default setting is '"
+              << ( mode == Mode::Archive ? "--directory-archive" : "--root-archive" ) << "' .";
+      quit::invalidCliUsage(message.str());
+    }
+    
+    if(parseResult.count("root-archive")){
+      return false;
+    }
+    
+    if(parseResult.count("directory-archive")){
+      return true;
+    }
+    
+    if( mode == Mode::Archive ){
+      return true;
+    }else{
+      return false;
+    }
+  }else{
+    return false;
+  }
 }

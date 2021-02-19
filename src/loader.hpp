@@ -18,6 +18,6 @@ std::filesystem::path loadPath(const std::string& filePath);
 
 bool isDirectory(const std::filesystem::path& path);
 
-File createArchive(const std::vector<std::filesystem::path>& files, const std::string& name, bool createDirectoriesInRoot);
+File createArchive(const std::vector<std::filesystem::path>& files, const std::string& name, bool directoryCreation);
 
 #endif

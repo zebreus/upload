@@ -10,7 +10,7 @@ std::vector<File> loadFiles(const Settings& settings){
         for(const std::string& fileName: settings.getFiles()){
           auto path = loadPath(fileName);
           if(std::filesystem::is_directory(path)){
-            result.push_back(createArchive(std::vector<std::filesystem::path>{path},path.filename(),true));
+            result.push_back(createArchive(std::vector<std::filesystem::path>{path},path.filename(),settings.getDirectoryArchive()));
           }else{
             result.emplace_back(path);
           }
@@ -21,7 +21,7 @@ std::vector<File> loadFiles(const Settings& settings){
         for(const std::string& fileName: settings.getFiles()){
           paths.push_back(loadPath(fileName));
         }
-        result.push_back(createArchive(paths,settings.getArchiveName(),false));
+        result.push_back(createArchive(paths,settings.getArchiveName(),settings.getDirectoryArchive()));
         break;
     }
     return result;
@@ -72,7 +72,7 @@ std::filesystem::path loadPath(const std::string& filePath){
 #ifdef __unix__
       int accessResult = access(filePath.c_str(), R_OK);
       if(accessResult != 0){
-        message << "You do not have the permission to access " << filePath << " . Contact your systemadmisitrator about that. You can give everyone read permissions to that file with 'sudo chmod -R a+r " << filePath << "'";
+        message << "You do not have the permission to access " << filePath << " . Contact your system administrator about that, or something. You can give everyone read permissions to that file with 'sudo chmod -R a+r " << filePath << "'";
         quit::failedReadingFiles(message.str());
       }
 #endif
@@ -80,7 +80,7 @@ std::filesystem::path loadPath(const std::string& filePath){
   }
 }
 
-File createArchive(const std::vector<std::filesystem::path>& files, const std::string& name, bool createDirectoriesInRoot){
+File createArchive(const std::vector<std::filesystem::path>& files, const std::string& name, bool directoryCreation){
   miniz_cpp::zip_file file;
 
   for(const std::filesystem::path& path : files){
@@ -94,7 +94,7 @@ File createArchive(const std::vector<std::filesystem::path>& files, const std::s
       }
       
       std::filesystem::path basePath = canonicalPath;
-      if(!createDirectoriesInRoot){
+      if(directoryCreation){
         basePath.remove_filename();
       }
       
@@ -118,14 +118,6 @@ File createArchive(const std::vector<std::filesystem::path>& files, const std::s
       file.writestr(f.getName(), f.getContent());
     }
   }
-  
-  file.writestr("file1.txt", "this is file 1");
-  file.writestr("file2.txt", "this is file 2");
-  file.writestr("file3.txt", "this is file 3");
-  file.writestr("file4.txt", "this is file 4");
-  file.writestr("file5.txt", "this is file 5");
-  file.writestr("test/", "");
-  file.writestr("toast/file5.txt", "this is file 5");
   
   std::stringstream archiveStream;
   file.save(archiveStream);

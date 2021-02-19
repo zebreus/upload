@@ -38,6 +38,7 @@ private:
   std::string archiveName;
   std::vector<std::string> requestedTargets;
   std::vector<std::string> files;
+  bool directoryArchive;
   
   static constexpr ArchiveType defaultArchiveType = ArchiveType::Zip;
   static constexpr HttpsSetting defaultHttpsSetting = HttpsSetting::Allow;
@@ -53,6 +54,7 @@ public:
   std::string getArchiveName() const;
   std::vector<std::string> getRequestedTargets() const;
   std::vector<std::string> getFiles() const;
+  bool getDirectoryArchive() const;
 
 private:
   cxxopts::Options generateParser();
@@ -63,6 +65,7 @@ private:
   ArchiveType parseArchiveType(const auto& parseResult);
   HttpsSetting parseHttpsSetting(const auto& parseResult);
   std::vector<std::string> parseFiles(const auto& parseResult, Settings::Mode mode);
+  bool parseDirectoryArchive(const auto& parseResult, Settings::Mode mode);
 };
 
 #endif
