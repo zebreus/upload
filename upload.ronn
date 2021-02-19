@@ -51,15 +51,19 @@ Mode independend options apply in archive and in individual mode.
  * `--archive-type`=<zip> :
    Sets the archive type.
 
- * `-d` [*"true"*|"false"], `--directory-in-archive`=[*"true"*|"false"] :
-   When archiving a directory whether to put the contents in the root of the archive or to create the directory in the archive.
-   If set without a value, true is assumed.
-   Defaults to true in archive mode, if not set.
-   Defaults to false in individual mode, if not set.
+ * `-r`, `--root-archive` :
+   When archiving a directory, files inside that directory will be put in a directory with the same name in the archive.
+   This is the default setting in archive mode.
+   Mutually exclusive with `-d`/`--directory-archive.
+
+ * `-d`, `--directory-archive` :
+   When archiving a directory, files inside that directory will be put on the root level of the archive.
+   This is the default setting in individual mode.
+   Mutually exclusive with `-r`/`--root-archive.
 
 Target selection options. These options are used to select the target.
 
- * `-t` <host>, `--target` <host> :
+ * `-t` <host>, `--target`=<host> :
    Select a specific target. If used multiple times, the target preference order will be the order of occurence.
    If this option is used, the default order is discarded.
 
@@ -70,7 +74,7 @@ Target selection options. These options are used to select the target.
    Ensure, that the upload target uses https.
 
  * `--no-ssl` :
-   Ensure, that the upload target does not use http.
+   Ensure, that the upload target uses http.
 
 Indivial mode options. They are only used in individual mode.
 
