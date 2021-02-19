@@ -59,13 +59,14 @@ public:
 private:
   cxxopts::Options generateParser();
   void parseOptions(int argc, char** argv);
-  std::string generateArchiveName();
+  std::string getArchiveExtension(const Settings::ArchiveType archiveType);
   Mode parseMode(const auto& parseResult);
   VerbosityLevel parseVerbosity(const auto& parseResult);
   ArchiveType parseArchiveType(const auto& parseResult);
   HttpsSetting parseHttpsSetting(const auto& parseResult);
   std::vector<std::string> parseFiles(const auto& parseResult, Settings::Mode mode);
   bool parseDirectoryArchive(const auto& parseResult, Settings::Mode mode);
+  std::string parseArchiveName(const auto& parseResult, Settings::ArchiveType type);
 };
 
 #endif

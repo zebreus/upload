@@ -56,7 +56,7 @@ cxxopts::Options Settings::generateParser(){
   ("p,preserve-name", "Ensure that the filenames are preserved.")
   ("s,ssl", "Ensure the use of https.")
   ("no-ssl", "Ensure the use of http.")
-  ("n,name", "The name of the created archive in archive mode.", cxxopts::value<std::string>()->default_value(generateArchiveName()))
+  ("n,name", "The name of the created archive in archive mode.", cxxopts::value<std::string>())
   ("file", "The files that will be uploaded.", cxxopts::value<std::vector<std::string>>())
   ;
   options.parse_positional({"file"});
@@ -81,7 +81,7 @@ void Settings::parseOptions(int argc, char** argv){
   if(result.count("target")){
     requestedTargets = result["file"].template as<std::vector<std::string>>();
   }
-  archiveName = result["name"].template as<std::string>();
+  archiveName = parseArchiveName(result, archiveType);
   preserveName = result.count("preserve-name");
   directoryArchive = parseDirectoryArchive(result, mode);
   }catch(std::exception e){
@@ -89,12 +89,12 @@ void Settings::parseOptions(int argc, char** argv){
   }
 }
 
-std::string Settings::generateArchiveName(){
-  char name[11];
-  for(int x = 0; x < 10; x++){
-    name[x] = (rand()%26)+97;
+std::string Settings::getArchiveExtension(Settings::ArchiveType archiveType){
+  switch(archiveType){
+    case ArchiveType::Zip:
+    default:
+      return "zip";
   }
-  return name;
 }
 
 Settings::Mode Settings::parseMode(const auto& parseResult){
@@ -200,4 +200,30 @@ bool Settings::parseDirectoryArchive(const auto& parseResult, Settings::Mode mod
   }else{
     return false;
   }
+}
+
+std::string Settings::parseArchiveName(const auto& parseResult, Settings::ArchiveType archiveType){
+  if(parseResult.count("name")){
+    std::string name = parseResult["name"].template as<std::string>();
+    //TODO better check for valid names
+    if(name == ""){
+      std::stringstream message;
+      message << "You set an invalid archive name " << name << " . At the moment I cannot make any recommendations for improvement.";
+      quit::invalidCliUsage(message.str());
+    }
+    return name;
+  }
+  
+  std::string name;
+  
+  int nameLength = 8;
+  name.reserve(nameLength+1);
+  srand(time(NULL));
+  for(int x = 0; x < nameLength; x++){
+    name.push_back(65 + (rand()%2)*32 + (rand()%26) ); 
+  }
+  
+  name.push_back('.');
+  name.append(getArchiveExtension(archiveType));
+  return name;
 }
