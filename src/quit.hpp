@@ -16,6 +16,8 @@ namespace quit{
 
 [[ noreturn ]] void failedReadingFiles(const std::string& message = "");
 
+[[ noreturn ]] void unexpectedFailure(const std::string& message = "");
+
 }
 
 #endif

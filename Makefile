@@ -16,9 +16,9 @@ INCLUDE_DIRS += $(LIB_DIR)/cxxopts/include
 INCLUDE_DIRS += $(LIB_DIR)/miniz-cpp
 INCLUDE_FLAGS := $(addprefix -I,$(INCLUDE_DIRS))
 
-CXX_FLAGS := $(INCLUDE_FLAGS) -MMD -MP -std=c++2a
+CXX_FLAGS := $(INCLUDE_FLAGS) -MMD -MP -std=c++2a -pthread
 
-LD_FLAGS := 
+LD_FLAGS := -std=c++2a -pthread
 
 all: $(BUILD_DIR)/$(TARGET)
 

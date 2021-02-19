@@ -2,6 +2,7 @@
 #define TARGET_HPP
 
 #include <string>
+#include <functional>
 #include "file.hpp"
 
 enum BackendFeatures{
@@ -23,11 +24,14 @@ class Target{
 public:
   virtual std::string getName() const = 0;
   virtual BackendFeatures getSupportedFeatures() const = 0;
-  //Check if the backend can be used
-  virtual bool staticCheck(BackendFeatures requiredFeatures) const = 0;
-  //Check if the backend is available
-  virtual void dynamicCheck(BackendFeatures requiredFeatures, const File& file, void (*successCallback)(), void (*errorCallback)(std::string), int timeoutMillis) = 0;
-  virtual void uploadFile(BackendFeatures requiredFeatures, const File& file, void (*successCallback)(std::string), void (*errorCallback)(std::string)) = 0;
+  //Check if the backend can be used with these settings
+  virtual bool staticSettingsCheck(BackendFeatures requiredFeatures) const = 0;
+  //Check if the backend can accept that file
+  virtual bool staticFileCheck(BackendFeatures requiredFeatures, const File& file) const = 0;
+  //Check if the backend is reachable.
+  virtual void dynamicSettingsCheck(BackendFeatures requiredFeatures, std::function<void()> successCallback, std::function<void(std::string)> errorCallback, int timeoutMillis) = 0;
+  //Upload a file.
+  virtual void uploadFile(BackendFeatures requiredFeatures, const File& file, std::function<void(std::string)> successCallback, std::function<void(std::string)> errorCallback) = 0;
 };
 
 #endif

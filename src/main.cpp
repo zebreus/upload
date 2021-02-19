@@ -12,7 +12,7 @@ int main(int argc , char** argv){
   Uploader uploader(settings);
   
   for(const File& file : files){
-    std::cout << file.getName() << std::endl;
+    std::cout << uploader.uploadFile(file) << std::endl;
   }
   return 0;
 }

@@ -23,3 +23,8 @@
   std::cerr << message << '\n';
   exit(65);
 }
+
+[[ noreturn ]] void quit::unexpectedFailure(const std::string& message){
+  std::cerr << message << '\n';
+  exit(1);
+}
