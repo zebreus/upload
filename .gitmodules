@@ -2,3 +2,6 @@
 	path = libs/cxxopts
 	url = https://github.com/jarro2783/cxxopts.git
 	branch = tag/v2.2.1
+[submodule "libs/miniz-cpp"]
+	path = libs/miniz-cpp
+	url = https://github.com/tfussell/miniz-cpp.git

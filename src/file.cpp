@@ -6,10 +6,10 @@ File::File(const std::filesystem::path& path){
     quit::failedReadingFiles("You tried to open something, that is not a regular file. If you see this error message, please open an issue on github.");
   }
   
-  std::ifstream fileStream(path);
+  std::ifstream fileStream(path, std::ios::binary | std::ios::in);
   fileStream.seekg(0, std::ios::end);
   size_t size = fileStream.tellg();
-  content.reserve(size);
+  content.resize(size);
   fileStream.seekg(0);
   fileStream.read(&content[0], size);
   

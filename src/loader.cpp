@@ -1,24 +1,30 @@
 #include "loader.hpp"
+#include <zip_file.hpp>
 
 std::vector<File> loadFiles(const Settings& settings){
     std::vector<File> result;
     switch(settings.getMode()){
       case Settings::Mode::List:
-        return result;
+        break;
       case Settings::Mode::Individual:
         for(const std::string& fileName: settings.getFiles()){
           auto path = loadPath(fileName);
           if(std::filesystem::is_directory(path)){
-            result.push_back(createArchive(std::vector<std::filesystem::path>{path},path.filename(),false));
+            result.push_back(createArchive(std::vector<std::filesystem::path>{path},path.filename(),true));
           }else{
             result.emplace_back(path);
           }
         }
-        return result;
+        break;
       case Settings::Mode::Archive:
+        std::vector<std::filesystem::path> paths;
+        for(const std::string& fileName: settings.getFiles()){
+          paths.push_back(loadPath(fileName));
+        }
+        result.push_back(createArchive(paths,settings.getArchiveName(),false));
         break;
     }
-    return std::vector<File>{};
+    return result;
 }
 
 std::filesystem::path loadPath(const std::string& filePath){
@@ -75,6 +81,55 @@ std::filesystem::path loadPath(const std::string& filePath){
 }
 
 File createArchive(const std::vector<std::filesystem::path>& files, const std::string& name, bool createDirectoriesInRoot){
-  //TODO replace placeholder
-  return File("placeholder", "content");
+  miniz_cpp::zip_file file;
+
+  for(const std::filesystem::path& path : files){
+    if(std::filesystem::is_directory(path)){
+      std::error_code error;
+      std::filesystem::path canonicalPath =  std::filesystem::canonical(path, error);
+      if(error){
+        std::stringstream message;
+        message << "Failed to create canonical path of " << path << " . This should not happen.";
+        quit::failedReadingFiles(message.str());
+      }
+      
+      std::filesystem::path basePath = canonicalPath;
+      if(!createDirectoriesInRoot){
+        basePath.remove_filename();
+      }
+      
+      for(auto& p: std::filesystem::recursive_directory_iterator(canonicalPath)){
+        //Absolute path in filesystem
+        std::filesystem::path realPath = loadPath(p.path());
+        //Path in archive
+        std::filesystem::path resultPath = std::filesystem::relative(realPath, basePath);
+        
+        if(std::filesystem::is_directory(realPath)){
+          std::string resultDirPath = resultPath.string() + "/";
+          file.writestr(resultDirPath, "");
+        }else{
+          File f(realPath);
+          file.writestr(resultPath, f.getContent());
+        }
+      }
+      
+    }else{
+      File f(path);
+      file.writestr(f.getName(), f.getContent());
+    }
+  }
+  
+  file.writestr("file1.txt", "this is file 1");
+  file.writestr("file2.txt", "this is file 2");
+  file.writestr("file3.txt", "this is file 3");
+  file.writestr("file4.txt", "this is file 4");
+  file.writestr("file5.txt", "this is file 5");
+  file.writestr("test/", "");
+  file.writestr("toast/file5.txt", "this is file 5");
+  
+  std::stringstream archiveStream;
+  file.save(archiveStream);
+ 
+  return File(name, archiveStream.str());
+  
 }
