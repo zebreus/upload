@@ -7,8 +7,8 @@
 #include <memory>
 #include <stdexcept>
 #include "settings.hpp"
-#include "localtarget.hpp"
-#include "nullpointertarget.hpp"
+#include <localtarget.hpp>
+#include <nullpointertarget.hpp>
 #include "quit.hpp"
 #include <future>
 
