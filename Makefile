@@ -14,6 +14,7 @@ DEPS := $(OBJS:.o=.d)
 INCLUDE_DIRS := $(shell find $(SRC_DIR) -type d)
 INCLUDE_DIRS += $(LIB_DIR)/cxxopts/include
 INCLUDE_DIRS += $(LIB_DIR)/miniz-cpp
+INCLUDE_DIRS += $(LIB_DIR)/cpp-httplib
 INCLUDE_FLAGS := $(addprefix -I,$(INCLUDE_DIRS))
 
 CXX_FLAGS := $(INCLUDE_FLAGS) -MMD -MP -std=c++2a -pthread
