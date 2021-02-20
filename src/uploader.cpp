@@ -12,8 +12,10 @@ std::string Uploader::uploadFile(const File& file){
   for(const std::shared_ptr<Target>& target: checkedTargets){
     try{
       return uploadFile(file, target);
+    }catch(std::runtime_error e){
+      std::clog << "RTError" << e.what() << '\n';
     }catch(std::exception e){
-      //std::clog << "Error" << e.what() << '\n';
+      std::clog << "Error" << e.what() << '\n';
     }
   }
   
@@ -21,8 +23,10 @@ std::string Uploader::uploadFile(const File& file){
     checkNextTarget();
     try{
       return uploadFile(file, checkedTargets.back());
+    }catch(std::runtime_error e){
+      std::clog << "RTError" << e.what() << '\n';
     }catch(std::exception e){
-      //std::clog << "Error" << e.what() << '\n';
+      std::clog << "Error" << e.what() << '\n';
     }
   }
 }
@@ -36,7 +40,7 @@ std::string Uploader::uploadFile(const File& file, std::shared_ptr<Target> targe
       quit::unexpectedFailure("Failed to set urlPromise value. If your are compiling this code yourself, you probably forgot to enable threads . Try '-pthread'.");
     }
   },[&urlPromise](std::string message){
-    urlPromise.set_exception(std::make_exception_ptr(std::runtime_error("lool")));
+    urlPromise.set_exception(std::make_exception_ptr(std::runtime_error(message)));
   });
   
   return urlPromise.get_future().get();
@@ -53,6 +57,11 @@ void Uploader::printAvailableTargets(){
 }
 
 void Uploader::initializeTargets(const Settings& settings){
+  std::shared_ptr<Target> nullPointerTarget(new NullPointerTarget());
+  if(nullPointerTarget->staticSettingsCheck(settings.getRequiredFeatures())){
+    targets.push_back(nullPointerTarget);
+  }
+  
   for(std::string testPath : {"./alpha", "./beta", "./gamma"}){
     std::shared_ptr<Target> target(new LocalTarget(testPath));
     if(target->staticSettingsCheck(settings.getRequiredFeatures())){
