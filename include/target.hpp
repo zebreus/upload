@@ -49,7 +49,7 @@ extern "C" struct TargetList {
 // Defines a load_targets_dynamically function, that calls type::loadTargets().
 // You need to use this makro (or define 'TargetList load_targets_dynamically()' yourself) in your target module, if you want it to be dynamically loadable.
 #define setTargetType(type) \
- __attribute__((weak)) extern "C" TargetList load_targets_dynamically() \
+extern "C" TargetList __attribute__((weak)) load_targets_dynamically() \
   { \
   static_assert(std::is_base_of<Target, type>::value, "You have to call the setTargetType makro with your target type like 'setTargetType(NullPointerTarget)'. Your target type has to inherit from Target.'"); \
   static_assert(ValidTarget<type>, "You have not defined 'static std::vector<Target*> loadTargets()' in your Target class (" #type ". You need to define this method, as it will be called, to to create the Target objects."); \
