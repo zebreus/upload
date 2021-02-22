@@ -7,10 +7,10 @@
 #include <memory>
 #include <stdexcept>
 #include "settings.hpp"
-#include <localtarget.hpp>
-#include <nullpointertarget.hpp>
+#include <target.hpp>
 #include "quit.hpp"
 #include <future>
+#include "targetloader.hpp"
 
 class Uploader{
   std::list<std::shared_ptr<Target>> targets;

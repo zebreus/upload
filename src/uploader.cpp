@@ -57,14 +57,11 @@ void Uploader::printAvailableTargets(){
 }
 
 void Uploader::initializeTargets(const Settings& settings){
-  std::shared_ptr<Target> nullPointerTarget(new NullPointerTarget());
-  if(nullPointerTarget->staticSettingsCheck(settings.getRequiredFeatures())){
-    targets.push_back(nullPointerTarget);
-  }
-  
-  for(std::string testPath : {"./alpha", "./beta", "./gamma"}){
-    std::shared_ptr<Target> target(new LocalTarget(testPath));
+  std::vector<std::shared_ptr<Target>> loadedTargets = loadTargets();
+  for(std::shared_ptr<Target> target: loadedTargets){
+    std::clog << "Checking " << target->getName() << '\n';
     if(target->staticSettingsCheck(settings.getRequiredFeatures())){
+      std::clog << "Success" << target->getName() << '\n';
       targets.push_back(target);
     }
   }

@@ -1,6 +1,11 @@
 #include "nullpointertarget.hpp"
 
+setTargetType(NullPointerTarget)
+
 NullPointerTarget::NullPointerTarget(){
+}
+
+NullPointerTarget::~NullPointerTarget(){
 }
 
 std::string NullPointerTarget::getName() const{
@@ -128,4 +133,9 @@ bool NullPointerTarget::isReachable(){
 
 bool NullPointerTarget::checkFile(const File& f) const{
   return true;
+}
+
+std::vector<Target*> NullPointerTarget::loadTargets(){
+  Target* myTarget = new NullPointerTarget();
+  return std::vector<Target*>{myTarget};
 }

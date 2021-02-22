@@ -1,5 +1,7 @@
 #include "localtarget.hpp"
 
+
+
 LocalTarget::LocalTarget(std::filesystem::path basePath): basePath(basePath){
 }
 
@@ -90,3 +92,10 @@ bool LocalTarget::validBasePath(){
 #endif
   return true;
 }
+
+std::vector<Target*> LocalTarget::loadTargets(){
+  Target* myTarget = new LocalTarget("./beta");
+  return std::vector<Target*>{myTarget};
+}
+
+setTargetType(LocalTarget)

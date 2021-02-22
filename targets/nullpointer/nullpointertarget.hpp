@@ -15,12 +15,14 @@ class NullPointerTarget : public Target {
 
 public:
   NullPointerTarget();
+  ~NullPointerTarget() override;
   std::string getName() const override;
   BackendFeatures getSupportedFeatures() const override;
   bool staticSettingsCheck(BackendFeatures requiredFeatures) const override;
   bool staticFileCheck(BackendFeatures requiredFeatures, const File& file) const override;
   void dynamicSettingsCheck(BackendFeatures requiredFeatures, std::function<void()> successCallback, std::function<void(std::string)> errorCallback, int timeoutMillis) override;
   void uploadFile(BackendFeatures requiredFeatures, const File& file, std::function<void(std::string)> successCallback, std::function<void(std::string)> errorCallback) override;
+  static std::vector<Target*> loadTargets();
 private:
   bool isReachable();
   bool checkFile(const File& f) const;
