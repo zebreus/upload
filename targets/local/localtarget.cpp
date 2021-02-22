@@ -13,7 +13,7 @@ BackendFeatures LocalTarget::getSupportedFeatures() const{
   return supportedFeatures;
 }
 
-bool LocalTarget::staticSettingsCheck(BackendFeatures requiredFeatures) const{
+bool LocalTarget::staticSettingsCheck(BackendRequirements requiredFeatures) const{
   if((requiredFeatures & supportedFeatures) != requiredFeatures){
     //std::clog << "Not all requiredFeatures are supported" << requiredFeatures << " " << supportedFeatures << "\n";
     return false;
@@ -22,7 +22,7 @@ bool LocalTarget::staticSettingsCheck(BackendFeatures requiredFeatures) const{
   return true;
 }
 
-bool LocalTarget::staticFileCheck(BackendFeatures requiredFeatures, const File& file) const{
+bool LocalTarget::staticFileCheck(BackendRequirements requiredFeatures, const File& file) const{
   std::string filename = file.getName();
   if( std::filesystem::path(file.getName()).remove_filename() != "" ){
     //std::clog << "Filename has to be only a filename\n";
@@ -31,7 +31,7 @@ bool LocalTarget::staticFileCheck(BackendFeatures requiredFeatures, const File& 
   return true;
 }
 
-void LocalTarget::dynamicSettingsCheck(BackendFeatures requiredFeatures, std::function<void()> successCallback, std::function<void(std::string)> errorCallback, int timeoutMillis){
+void LocalTarget::dynamicSettingsCheck(BackendRequirements requiredFeatures, std::function<void()> successCallback, std::function<void(std::string)> errorCallback, int timeoutMillis){
   if(validBasePath()){
     successCallback();
   }else{
@@ -39,7 +39,7 @@ void LocalTarget::dynamicSettingsCheck(BackendFeatures requiredFeatures, std::fu
   }
 }
 
-void LocalTarget::uploadFile(BackendFeatures requiredFeatures, const File& file, std::function<void(std::string)> successCallback, std::function<void(std::string)> errorCallback){
+void LocalTarget::uploadFile(BackendRequirements requiredFeatures, const File& file, std::function<void(std::string)> successCallback, std::function<void(std::string)> errorCallback){
   std::filesystem::path targetFile(basePath);
   targetFile.append(file.getName());
   if(!fileCanBeCreated(targetFile)){

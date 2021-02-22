@@ -19,11 +19,10 @@ class LocalTarget : public Target {
 public:
   LocalTarget(std::filesystem::path basePath);
   std::string getName() const override;
-  BackendFeatures getSupportedFeatures() const override;
-  bool staticSettingsCheck(BackendFeatures requiredFeatures) const override;
-  bool staticFileCheck(BackendFeatures requiredFeatures, const File& file) const override;
-  void dynamicSettingsCheck(BackendFeatures requiredFeatures, std::function<void()> successCallback, std::function<void(std::string)> errorCallback, int timeoutMillis) override;
-  void uploadFile(BackendFeatures requiredFeatures, const File& file, std::function<void(std::string)> successCallback, std::function<void(std::string)> errorCallback) override;
+  bool staticSettingsCheck(BackendRequirements requiredFeatures) const override;
+  bool staticFileCheck(BackendRequirements requiredFeatures, const File& file) const override;
+  void dynamicSettingsCheck(BackendRequirements requiredFeatures, std::function<void()> successCallback, std::function<void(std::string)> errorCallback, int timeoutMillis) override;
+  void uploadFile(BackendRequirements requiredFeatures, const File& file, std::function<void(std::string)> successCallback, std::function<void(std::string)> errorCallback) override;
   static std::vector<Target*> loadTargets();
 private:
   bool fileCanBeCreated(std::filesystem::path path);

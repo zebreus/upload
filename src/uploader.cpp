@@ -34,7 +34,7 @@ std::string Uploader::uploadFile(const File& file){
 
 std::string Uploader::uploadFile(const File& file, std::shared_ptr<Target> target){
   std::promise<std::string> urlPromise;
-  target->uploadFile(settings.getRequiredFeatures(), file, [this, &urlPromise](std::string url){
+  target->uploadFile(settings.getBackendRequirements(), file, [this, &urlPromise](std::string url){
     try{
       urlPromise.set_value(url);
     }catch(std::exception e){
@@ -60,7 +60,7 @@ void Uploader::printAvailableTargets(){
 void Uploader::initializeTargets(const Settings& settings){
   std::vector<std::shared_ptr<Target>> loadedTargets = loadTargets();
   for(std::shared_ptr<Target> target: loadedTargets){
-    if(target->staticSettingsCheck(settings.getRequiredFeatures())){
+    if(target->staticSettingsCheck(settings.getBackendRequirements())){
       logger.log(Logger::Debug) << target->getName() << " has all required features." << '\n';
       targets.push_back(target);
     }else{
@@ -84,7 +84,7 @@ void Uploader::checkNextTarget(std::promise<std::shared_ptr<Target>>& promise){
   }
   std::shared_ptr<Target> nextTarget = targets.front();
   targets.pop_front();
-  nextTarget->dynamicSettingsCheck(settings.getRequiredFeatures(), [this, &promise, &nextTarget](){
+  nextTarget->dynamicSettingsCheck(settings.getBackendRequirements(), [this, &promise, &nextTarget](){
     try{
       promise.set_value(nextTarget);
     }catch(std::exception e){

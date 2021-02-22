@@ -7,13 +7,13 @@ MKDIR := mkdir -p
 
 TARGETS_DIR = targets
 TARGETS_BUILD_DIR = ../../$(BUILD_DIR)
-TARGETS += nullpointer local
+TARGETS += nullpointer
 STATIC_TARGET_LIBS = $(TARGETS:%=$(BUILD_DIR)/lib%.a)
 SHARED_TARGET_LIBS = $(TARGETS:%=$(BUILD_DIR)/lib%.so)
 
 # TODO improve this
 # If set to yeah, the targets are build as shared libraries
-DYNAMIC := nay
+DYNAMIC := yeah
 
 UPLOAD := upload
 INCLUDE_DIRS += include

@@ -4,6 +4,12 @@
 setTargetType(NullPointerTarget)
 
 NullPointerTarget::NullPointerTarget(){
+  capabilities.http = true;
+  capabilities.https = false;
+  capabilities.maxSize = 536870912;
+  capabilities.preserveName.reset(new bool(false));
+  capabilities.minRetention = (long long)30*24*60*60*1000;
+  capabilities.maxRetention = (long long)365*24*60*60*1000;
 }
 
 NullPointerTarget::~NullPointerTarget(){
@@ -13,20 +19,15 @@ std::string NullPointerTarget::getName() const{
   return name;
 }
 
-BackendFeatures NullPointerTarget::getSupportedFeatures() const{
-  return supportedFeatures;
-}
-
-bool NullPointerTarget::staticSettingsCheck(BackendFeatures requiredFeatures) const{
-  if((requiredFeatures & supportedFeatures) != requiredFeatures){
-    logger.log(Logger::Topic::Debug) << "Not all requiredFeatures are supported" << requiredFeatures << " " << supportedFeatures << "\n";
+bool NullPointerTarget::staticSettingsCheck(BackendRequirements requirements) const{
+  if(!capabilities.meetsRequirements(requirements)){
+    logger.log(Logger::Topic::Debug) << "Not all requiredFeatures are supported\n";
     return false;
   }
-
   return true;
 }
 
-bool NullPointerTarget::staticFileCheck(BackendFeatures requiredFeatures, const File& file) const{
+bool NullPointerTarget::staticFileCheck(BackendRequirements requirements, const File& file) const{
   std::string filename = file.getName();
   if( filename == "" ){
     logger.log(Logger::Topic::Info) << "You have specified an empty filename." << '\n';
@@ -38,7 +39,7 @@ bool NullPointerTarget::staticFileCheck(BackendFeatures requiredFeatures, const 
   return true;
 }
 
-void NullPointerTarget::dynamicSettingsCheck(BackendFeatures requiredFeatures, std::function<void()> successCallback, std::function<void(std::string)> errorCallback, int timeoutMillis){  
+void NullPointerTarget::dynamicSettingsCheck(BackendRequirements requirements, std::function<void()> successCallback, std::function<void(std::string)> errorCallback, int timeoutMillis){  
   std::string errorMessage;
   if(isReachable(errorMessage)){
     successCallback();
@@ -47,7 +48,7 @@ void NullPointerTarget::dynamicSettingsCheck(BackendFeatures requiredFeatures, s
   }
 }
 
-void NullPointerTarget::uploadFile(BackendFeatures requiredFeatures, const File& file, std::function<void(std::string)> successCallback, std::function<void(std::string)> errorCallback){
+void NullPointerTarget::uploadFile(BackendRequirements requirements, const File& file, std::function<void(std::string)> successCallback, std::function<void(std::string)> errorCallback){
   std::string httpUrl = "http://";
   httpUrl.append(url);
   httplib::Client cli(httpUrl.c_str());

@@ -37,24 +37,27 @@ bool Settings::getDirectoryArchive() const{
   return directoryArchive;
 }
 
-BackendFeatures Settings::getRequiredFeatures() const{
-  BackendFeatures requiredFeatures = BackendFeatures::None;
+BackendRequirements Settings::getBackendRequirements() const{
+  BackendRequirements requirements;
+  
   if(preserveName){
-    requiredFeatures = requiredFeatures | BackendFeatures::PreserveName;
+    requirements.preserveName.reset(new bool(true));
   }
   
   switch(httpsSetting){
     case HttpsSetting::Forbid:
-      requiredFeatures = requiredFeatures | BackendFeatures::Http;
+      requirements.http.reset(new bool(true));
+      requirements.https.reset(new bool(false));
       break;
     case HttpsSetting::Force:
-      requiredFeatures = requiredFeatures | BackendFeatures::Https;
+      requirements.http.reset(new bool(false));
+      requirements.https.reset(new bool(true));
       break;
     default:
       break;
   }
   
-  return requiredFeatures;
+  return requirements;
 }
 
 cxxopts::Options Settings::generateParser(){
