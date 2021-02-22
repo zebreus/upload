@@ -1,4 +1,5 @@
 #include "nullpointertarget.hpp"
+#include <httplib.h>
 
 setTargetType(NullPointerTarget)
 

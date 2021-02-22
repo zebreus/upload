@@ -1,11 +1,10 @@
 #ifndef NULL_POINTER_TARGET_HPP
 #define NULL_POINTER_TARGET_HPP
 
-#include "target.hpp"
-#include "httplib.h"
+#include <target.hpp>
 #include <string>
 #include <regex>
-#include "logger.hpp"
+#include <logger.hpp>
 
 class NullPointerTarget : public Target {
   static constexpr BackendFeatures supportedFeatures = BackendFeatures::Http | BackendFeatures::PreserveName;
