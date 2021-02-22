@@ -18,7 +18,7 @@ BackendFeatures NullPointerTarget::getSupportedFeatures() const{
 
 bool NullPointerTarget::staticSettingsCheck(BackendFeatures requiredFeatures) const{
   if((requiredFeatures & supportedFeatures) != requiredFeatures){
-    //std::clog << "Not all requiredFeatures are supported" << requiredFeatures << " " << supportedFeatures << "\n";
+    logger.log(Logger::Topic::Debug) << "Not all requiredFeatures are supported" << requiredFeatures << " " << supportedFeatures << "\n";
     return false;
   }
 
@@ -28,7 +28,7 @@ bool NullPointerTarget::staticSettingsCheck(BackendFeatures requiredFeatures) co
 bool NullPointerTarget::staticFileCheck(BackendFeatures requiredFeatures, const File& file) const{
   std::string filename = file.getName();
   if( filename == "" ){
-    //std::clog << "Filename has to be set\n";
+    logger.log(Logger::Topic::Info) << "You have specified an empty filename." << '\n';
     return false;
   }
   if(!checkFile(file)){
@@ -63,12 +63,10 @@ void NullPointerTarget::uploadFile(BackendFeatures requiredFeatures, const File&
   
   if(auto res = cli.Post("/", headers, items)){
     //cli.set_follow_location(true);
-    std::cout << res->status;
-    std::cout << res->body;
+    logger.log(Logger::Topic::Debug) << "Received response from " << name << " (" << res->status << "): " << res->body << '\n';
     if(res->status != 200){
       std::stringstream message;
       message << "Request failed, responsecode " << httplib::detail::status_message(res->status) << "(" << res->status << ")." ;
-      std::cout << res.error();
       errorCallback(message.str());
       return;
     }
@@ -98,7 +96,6 @@ void NullPointerTarget::uploadFile(BackendFeatures requiredFeatures, const File&
   }else{
     std::stringstream message;
     message << "Request failed, responsecode " << res.error() << "." ;
-    std::cout << res.error();
     errorCallback(message.str());
     return;
   }
@@ -117,8 +114,7 @@ bool NullPointerTarget::isReachable(std::string& errorMessage){
   cli.set_default_headers(headers);
   if(auto res = cli.Post("/")){
     //cli.set_follow_location(true);
-    std::cout << res->status;
-    std::cout << res->body;
+    logger.log(Logger::Topic::Debug) << "Received response from " << name << " (" << res->status << "): " << res->body << '\n';
     if(res->status == 200 || res->status == 400){
       return true;
     }else{
@@ -149,7 +145,31 @@ bool NullPointerTarget::isReachable(std::string& errorMessage){
   }
 }
 
-bool NullPointerTarget::checkFile(const File& f) const{
+bool NullPointerTarget::checkFile(const File& file) const{
+  std::map<std::string, std::string> customTypes;
+  customTypes["he5"] = "application/x-hdf5";
+  customTypes["hdf5"] = "application/x-hdf5";
+  customTypes["h5"] = "application/x-hdf5";
+  customTypes["apk"] = "application/vnd.android.package-archive";
+  customTypes["jar"] = "application/java-archive";
+  std::string mimetype = httplib::detail::find_content_type(file.getName(), customTypes);
+  
+  if(
+    mimetype == "application/x-dosexec" ||
+    mimetype == "application/x-executable" ||
+    mimetype == "application/x-hdf5" ||
+    mimetype == "application/vnd.android.package-archive" ||
+    mimetype == "application/java-archive" ||
+    mimetype == "application/java-vm"
+  ){
+    logger.log(Logger::Topic::Info) << " does not allow the upload of " << mimetype << " files." << '\n';
+    return false;
+  }
+  
+  if(file.getContent().size() > 536870912){
+    logger.log(Logger::Topic::Info) << name << " has a size limit of 512 MiB per file." << '\n';
+    return false;
+  }
   return true;
 }
 
