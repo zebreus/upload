@@ -73,9 +73,9 @@ void NullPointerTarget::uploadFile(BackendFeatures requiredFeatures, const File&
     
     std::string content = res->body;
     //TODO improve expression
-    std::regex urlExpression("http[^ ]*", std::regex::icase | std::regex::ECMAScript);
+    std::regex urlExpression("http[-\\]_.~!*'();:@&=+$,/?%#[A-z0-9]+", std::regex::icase | std::regex::ECMAScript);
     std::smatch results;
-    std::regex_match(content,results,urlExpression);
+    std::regex_search(content,results,urlExpression);
     if(results.size()==1){
       std::string url = results[0];
       successCallback(url);
