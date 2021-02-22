@@ -38,10 +38,11 @@ bool NullPointerTarget::staticFileCheck(BackendFeatures requiredFeatures, const 
 }
 
 void NullPointerTarget::dynamicSettingsCheck(BackendFeatures requiredFeatures, std::function<void()> successCallback, std::function<void(std::string)> errorCallback, int timeoutMillis){  
-  if(isReachable()){
+  std::string errorMessage;
+  if(isReachable(errorMessage)){
     successCallback();
   }else {
-    errorCallback("Failed to connect");
+    errorCallback(errorMessage);
   }
 }
 
@@ -103,7 +104,7 @@ void NullPointerTarget::uploadFile(BackendFeatures requiredFeatures, const File&
   }
 }
 
-bool NullPointerTarget::isReachable(){
+bool NullPointerTarget::isReachable(std::string& errorMessage){
   std::string httpUrl = "http://";
   httpUrl.append(url);
   httplib::Client cli(httpUrl.c_str());
@@ -121,12 +122,29 @@ bool NullPointerTarget::isReachable(){
     if(res->status == 200 || res->status == 400){
       return true;
     }else{
+      errorMessage = "Received an unexpected reply. This should not happen.";
       return false;
     }
   }else{
     std::stringstream message;
-    message << "Reachability check failed, code " << res.error() ;
-    std::cout << message.str();
+    switch(res.error()){
+      case httplib::Connection:
+      case httplib::BindIPAddress:
+      message << name << " is not online. Check your internet connection.";
+      case httplib::Read:
+      case httplib::Write:
+      case httplib::Canceled:
+      message << name << " seems to be online, but something went wrong.";
+      case httplib::SSLConnection:
+      case httplib::SSLLoadingCerts:
+      case httplib::SSLServerVerification:
+      message << "Some kind of SSL error happened.";
+      case httplib::ExceedRedirectCount:
+      message << "Too many redirects. This is probably not your fault.";
+      default:
+      message << "Failed to establish connection. Maybe try again later.";
+    }
+    errorMessage = message.str();
     return false;
   }
 }

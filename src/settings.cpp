@@ -1,4 +1,5 @@
 #include "settings.hpp"
+#include "logger.hpp"
 
 Settings::Settings(int argc, char** argv){
   parseOptions(argc,argv);
@@ -6,10 +7,6 @@ Settings::Settings(int argc, char** argv){
 
 Settings::Mode Settings::getMode() const{
   return mode;
-}
-
-Settings::VerbosityLevel Settings::getVerbosity() const{
-  return verbosity;
 }
 
 Settings::ArchiveType Settings::getArchiveType() const{
@@ -87,25 +84,26 @@ void Settings::parseOptions(int argc, char** argv){
   try{
   cxxopts::Options options = generateParser();
   auto result = options.parse(argc,argv);
-  
+ 
   if (result.count("help")){
-    std::cout << options.help() << std::endl;
+    logger.log(Logger::Print) << options.help() << std::endl;
     quit::success();
   }
-  
+
+  initializeLogger(result);
   mode = parseMode(result);
   files = parseFiles(result, mode);
   archiveType = parseArchiveType(result);
   httpsSetting = parseHttpsSetting(result);
-  verbosity = parseVerbosity(result);
   if(result.count("target")){
     requestedTargets = result["file"].template as<std::vector<std::string>>();
   }
   archiveName = parseArchiveName(result, archiveType);
   preserveName = result.count("preserve-name");
   directoryArchive = parseDirectoryArchive(result, mode);
-  }catch(std::exception e){
-    quit::invalidCliUsage(e.what());
+  }catch(cxxopts::OptionException e){
+    logger.log(Logger::Fatal) << e.what() << '\n';
+    quit::invalidCliUsage();
   }
 }
 
@@ -119,7 +117,8 @@ std::string Settings::getArchiveExtension(Settings::ArchiveType archiveType){
 
 Settings::Mode Settings::parseMode(const auto& parseResult){
   if (parseResult.count("archive") && parseResult.count("individual")){
-    quit::invalidCliUsage("You cannot set archive mode and individual mode");
+    logger.log(Logger::Fatal) << "You cannot set archive mode and individual mode." << '\n';
+    quit::invalidCliUsage();
   }
   
   // Test for flags
@@ -141,18 +140,6 @@ Settings::Mode Settings::parseMode(const auto& parseResult){
   }
 }
 
-Settings::VerbosityLevel Settings::parseVerbosity(const auto& parseResult){
-  switch (parseResult.count("v")){
-    case 0:
-      return VerbosityLevel::Default;
-    case 1:
-      return VerbosityLevel::Verbose;
-    case 2:
-    default:
-      return VerbosityLevel::Debug;
-  }
-}
-
 Settings::ArchiveType Settings::parseArchiveType(const auto& parseResult){
   if(parseResult.count("archive-type")){
     std::string archiveType = parseResult["archive-type"].template as<std::string>();
@@ -160,7 +147,8 @@ Settings::ArchiveType Settings::parseArchiveType(const auto& parseResult){
     if(archiveType == "zip"){
       return ArchiveType::Zip;
     }else{
-      quit::invalidCliUsage("You specified an invalid archive-type. The only possible value is 'zip'");
+      logger.log(Logger::Fatal) << "You specified an invalid archive-type. The only possible value is 'zip'" << '\n';
+      quit::invalidCliUsage();
     }
   }
   return defaultArchiveType;
@@ -168,7 +156,8 @@ Settings::ArchiveType Settings::parseArchiveType(const auto& parseResult){
 
 Settings::HttpsSetting Settings::parseHttpsSetting(const auto& parseResult){
   if(parseResult.count("ssl") && parseResult.count("no-ssl")){
-    quit::invalidCliUsage("You cannot have ssl and no-ssl, try leaving one away");
+    logger.log(Logger::Fatal) << "You cannot have ssl and no-ssl, try leaving one away" << '\n';
+    quit::invalidCliUsage();
   }
   
   if(parseResult.count("ssl")){
@@ -186,7 +175,8 @@ std::vector<std::string> Settings::parseFiles(const auto& parseResult, Settings:
   bool filesRequired = ( mode == Mode::Archive || mode == Mode::Individual );
   if(parseResult.count("file") == 0){
     if(filesRequired){
-      quit::invalidCliUsage("You have to specify files to upload. Use upload like 'upload file.txt file2.txt'");
+      logger.log(Logger::Fatal) << "You have to specify files to upload. Use upload like 'upload file.txt file2.txt'" << '\n';
+      quit::invalidCliUsage();
     }else{
       return {};
     }
@@ -198,10 +188,9 @@ bool Settings::parseDirectoryArchive(const auto& parseResult, Settings::Mode mod
   bool settingRequired = ( mode == Mode::Archive || mode == Mode::Individual );
   if(settingRequired){
     if(parseResult.count("root-archive") && parseResult.count("directory-archive")){
-      std::stringstream message;
-      message << "You cannot have root-archive and directory-archive. Based on your mode the recommended and default setting is '"
-              << ( mode == Mode::Archive ? "--directory-archive" : "--root-archive" ) << "' .";
-      quit::invalidCliUsage(message.str());
+      logger.log(Logger::Fatal) << "You cannot have root-archive and directory-archive. Based on your mode the recommended and default setting is '"
+              << ( mode == Mode::Archive ? "--directory-archive" : "--root-archive" ) << "' ." << '\n';
+      quit::invalidCliUsage();
     }
     
     if(parseResult.count("root-archive")){
@@ -227,9 +216,8 @@ std::string Settings::parseArchiveName(const auto& parseResult, Settings::Archiv
     std::string name = parseResult["name"].template as<std::string>();
     //TODO better check for valid names
     if(name == ""){
-      std::stringstream message;
-      message << "You set an invalid archive name " << name << " . At the moment I cannot make any recommendations for improvement.";
-      quit::invalidCliUsage(message.str());
+      logger.log(Logger::Fatal) << "You set an invalid archive name " << name << " . At the moment I cannot make any recommendations for improvement." << '\n';
+      quit::invalidCliUsage();
     }
     return name;
   }
@@ -246,4 +234,31 @@ std::string Settings::parseArchiveName(const auto& parseResult, Settings::Archiv
   name.push_back('.');
   name.append(getArchiveExtension(archiveType));
   return name;
+}
+
+void Settings::initializeLogger(const auto& parseResult) const{
+  switch(parseResult.count("v")){
+    case 0:
+      logger.setTopicState(Logger::Topic::Fatal, true);
+      logger.setTopicState(Logger::Topic::Print, true);
+      logger.setTopicState(Logger::Topic::Info, false);
+      logger.setTopicState(Logger::Topic::Debug, false);
+      logger.setTopicState(Logger::Topic::Url, true);
+      break;
+    case 1:
+      logger.setTopicState(Logger::Topic::Fatal, true);
+      logger.setTopicState(Logger::Topic::Print, true);
+      logger.setTopicState(Logger::Topic::Info, true);
+      logger.setTopicState(Logger::Topic::Debug, false);
+      logger.setTopicState(Logger::Topic::Url, true);
+      break;
+    case 2:
+    default:
+      logger.setTopicState(Logger::Topic::Fatal, true);
+      logger.setTopicState(Logger::Topic::Print, true);
+      logger.setTopicState(Logger::Topic::Info, true);
+      logger.setTopicState(Logger::Topic::Debug, true);
+      logger.setTopicState(Logger::Topic::Url, true);
+      break;
+  }
 }

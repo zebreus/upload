@@ -15,12 +15,6 @@ public:
     Archive,
     List
   };
-  enum VerbosityLevel{
-    Silent,
-    Default,
-    Verbose,
-    Debug
-  };
   enum ArchiveType{
     Zip
   };
@@ -32,7 +26,6 @@ public:
   
 private:
   Mode mode;
-  VerbosityLevel verbosity;
   ArchiveType archiveType;
   HttpsSetting httpsSetting;
   bool preserveName;
@@ -48,7 +41,6 @@ private:
 public:
   Settings(int argc, char** argv);
   Mode getMode() const;
-  VerbosityLevel getVerbosity() const;
   ArchiveType getArchiveType() const;
   HttpsSetting getHttpsSetting() const;
   bool getPreserveName() const;
@@ -63,12 +55,12 @@ private:
   void parseOptions(int argc, char** argv);
   std::string getArchiveExtension(const Settings::ArchiveType archiveType);
   Mode parseMode(const auto& parseResult);
-  VerbosityLevel parseVerbosity(const auto& parseResult);
   ArchiveType parseArchiveType(const auto& parseResult);
   HttpsSetting parseHttpsSetting(const auto& parseResult);
   std::vector<std::string> parseFiles(const auto& parseResult, Settings::Mode mode);
   bool parseDirectoryArchive(const auto& parseResult, Settings::Mode mode);
   std::string parseArchiveName(const auto& parseResult, Settings::ArchiveType type);
+  void initializeLogger(const auto& parseResult) const;
 };
 
 #endif

@@ -3,6 +3,7 @@
 #include "file.hpp"
 #include "loader.hpp"
 #include "uploader.hpp"
+#include "logger.hpp"
 
 int main(int argc , char** argv){
   Settings settings(argc, argv);
@@ -12,7 +13,7 @@ int main(int argc , char** argv){
   Uploader uploader(settings);
   
   for(const File& file : files){
-    std::cout << uploader.uploadFile(file) << std::endl;
+    logger.log(Logger::Url) << uploader.uploadFile(file) << std::endl;
   }
   return 0;
 }

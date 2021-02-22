@@ -5,6 +5,7 @@
 #include <string>
 #include "file.hpp"
 #include "settings.hpp"
+#include "logger.hpp"
 
 
 #ifdef __unix__

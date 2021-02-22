@@ -5,6 +5,7 @@
 #include "httplib.h"
 #include <string>
 #include <regex>
+#include "logger.hpp"
 
 class NullPointerTarget : public Target {
   static constexpr BackendFeatures supportedFeatures = BackendFeatures::Http | BackendFeatures::PreserveName;
@@ -24,7 +25,7 @@ public:
   void uploadFile(BackendFeatures requiredFeatures, const File& file, std::function<void(std::string)> successCallback, std::function<void(std::string)> errorCallback) override;
   static std::vector<Target*> loadTargets();
 private:
-  bool isReachable();
+  bool isReachable(std::string& errorMessage);
   bool checkFile(const File& f) const;
 };
 

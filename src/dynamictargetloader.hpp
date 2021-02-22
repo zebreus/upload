@@ -1,5 +1,6 @@
 #include "targetloader.hpp"
 #include "target.hpp"
+#include "logger.hpp"
 
 #ifdef __unix__
 
@@ -11,7 +12,8 @@ std::vector<std::shared_ptr<Target>> loadTargetsFromFile(const std::filesystem::
   if(handle == NULL){
     // Failed to open library
     std::string message(dlerror());
-    std::clog << "Failed to open " << file << ". " << message << '\n';
+    logger.log(Logger::Info) << "Failed to load target library " << file << "." << '\n';
+    logger.log(Logger::Debug) << "This is the error message from your system: " << message << '\n';
     return std::vector<std::shared_ptr<Target>>{};
   }
   TargetList (*load_targets_dynamically)();
@@ -20,8 +22,9 @@ std::vector<std::shared_ptr<Target>> loadTargetsFromFile(const std::filesystem::
   const char* errorMessage = dlerror();
   if(errorMessage != NULL){
     // Library does not contain 'TargetList load_targets_dynamically()'
-    std::string message(errorMessage);
-    std::clog << "Library " << file << " does not contain 'TargetList load_targets_dynamically()'. Check, if " << file << " really is an upload target. If you build the library yourself you can use the setTargetType() macro to generate 'TargetList load_targets_dynamically()' for you. " << message << '\n';
+    logger.log(Logger::Info) << "The target library " << file << " doesn't seem to be a valid upload target." << '\n';
+    logger.log(Logger::Debug) << "Library " << file << " does not contain 'TargetList load_targets_dynamically()'. Check, if " << file << " really is an upload target. If you build the library yourself you can use the setTargetType() macro to generate 'TargetList load_targets_dynamically()' for you. " << '\n';
+    logger.log(Logger::Debug) << "This is the error message from your system: " << errorMessage << '\n';
     return std::vector<std::shared_ptr<Target>>{};
   }
   TargetList loadedTargetList = (TargetList)load_targets_dynamically();

@@ -14,7 +14,6 @@
 class LocalTarget : public Target {
   static constexpr BackendFeatures supportedFeatures = BackendFeatures::Http | BackendFeatures::PreserveName;
   static constexpr auto name = "localtarget";
-  
   std::filesystem::path basePath;
 
 public:

@@ -8,15 +8,15 @@ namespace quit{
 
 [[ noreturn ]] void success();
 
-[[ noreturn ]] void failedToUpload(const std::string& message = "");
+[[ noreturn ]] void failedToUpload();
 
-[[ noreturn ]] void noTargetSelected(const std::string& message = "");
+[[ noreturn ]] void noTargetSelected();
 
-[[ noreturn ]] void invalidCliUsage(const std::string& message = "");
+[[ noreturn ]] void invalidCliUsage();
 
-[[ noreturn ]] void failedReadingFiles(const std::string& message = "");
+[[ noreturn ]] void failedReadingFiles();
 
-[[ noreturn ]] void unexpectedFailure(const std::string& message = "");
+[[ noreturn ]] void unexpectedFailure();
 
 }
 

@@ -13,20 +13,21 @@ std::string Uploader::uploadFile(const File& file){
     try{
       return uploadFile(file, target);
     }catch(std::runtime_error e){
-      std::clog << "RTError" << e.what() << '\n';
-    }catch(std::exception e){
-      std::clog << "Error" << e.what() << '\n';
+      logger.log(Logger::Info) << "Failed to upload " << file.getName() << " to " << target->getName() << ". " << e.what() << '\n';
+    }catch(...){
+      logger.log(Logger::Info) << "Unexpected error while uploading " << file.getName() << " to " << target->getName() << "." << '\n';
     }
   }
   
   while(true){
     checkNextTarget();
+    std::shared_ptr<Target> target = checkedTargets.back();
     try{
-      return uploadFile(file, checkedTargets.back());
+      return uploadFile(file, target);
     }catch(std::runtime_error e){
-      std::clog << "RTError" << e.what() << '\n';
-    }catch(std::exception e){
-      std::clog << "Error" << e.what() << '\n';
+      logger.log(Logger::Info) << "Failed to upload " << file.getName() << " to " << target->getName() << ". " << e.what() << '\n';
+    }catch(...){
+      logger.log(Logger::Info) << "Unexpected error while uploading " << file.getName() << " to " << target->getName() << "." << '\n';
     }
   }
 }
@@ -37,7 +38,8 @@ std::string Uploader::uploadFile(const File& file, std::shared_ptr<Target> targe
     try{
       urlPromise.set_value(url);
     }catch(std::exception e){
-      quit::unexpectedFailure("Failed to set urlPromise value. If your are compiling this code yourself, you probably forgot to enable threads . Try '-pthread'.");
+      logger.log(Logger::Fatal) << "Failed to set urlPromise value. If your are compiling this code yourself, you probably forgot to enable threads . Try linking with '-pthread'." << '\n';
+      quit::unexpectedFailure();
     }
   },[&urlPromise](std::string message){
     urlPromise.set_exception(std::make_exception_ptr(std::runtime_error(message)));
@@ -48,21 +50,21 @@ std::string Uploader::uploadFile(const File& file, std::shared_ptr<Target> targe
 
 void Uploader::printAvailableTargets(){
   for(const std::shared_ptr<Target>& target: checkedTargets){
-    std::cout << target->getName() << '\n';
+    logger.log(Logger::Print) << target->getName() << '\n';
   }
   for(const std::shared_ptr<Target>& target: targets){
-    std::cout << target->getName() << '\n';
+    logger.log(Logger::Print) << target->getName() << '\n';
   }
-  std::cout << std::flush;
 }
 
 void Uploader::initializeTargets(const Settings& settings){
   std::vector<std::shared_ptr<Target>> loadedTargets = loadTargets();
   for(std::shared_ptr<Target> target: loadedTargets){
-    std::clog << "Checking " << target->getName() << '\n';
     if(target->staticSettingsCheck(settings.getRequiredFeatures())){
-      std::clog << "Success" << target->getName() << '\n';
+      logger.log(Logger::Debug) << target->getName() << " has all required features." << '\n';
       targets.push_back(target);
+    }else{
+      logger.log(Logger::Debug) << target->getName() << " does not have all required features." << '\n';
     }
   }
 }
@@ -77,7 +79,8 @@ void Uploader::checkNextTarget(){
 
 void Uploader::checkNextTarget(std::promise<std::shared_ptr<Target>>& promise){
   if(targets.size() == 0){
-    quit::failedToUpload("There is no reachable target matching your selection");
+    logger.log(Logger::Fatal) << "There is no target matching your requirements" << '\n';
+    quit::failedToUpload();
   }
   std::shared_ptr<Target> nextTarget = targets.front();
   targets.pop_front();
@@ -85,7 +88,8 @@ void Uploader::checkNextTarget(std::promise<std::shared_ptr<Target>>& promise){
     try{
       promise.set_value(nextTarget);
     }catch(std::exception e){
-      quit::unexpectedFailure("Failed to set promise value. If your are compiling this code yourself, you probably forgot to enable threads . Try '-pthread'.");
+      logger.log(Logger::Fatal) << "Failed to set promise value. If your are compiling this code yourself, you probably forgot to enable threads . Try '-pthread'." << '\n';
+      quit::unexpectedFailure();
     }
   },[this, &promise](std::string message){
     checkNextTarget(promise);

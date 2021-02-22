@@ -33,38 +33,38 @@ std::filesystem::path loadPath(const std::string& filePath){
   std::stringstream message;
   switch(fileStatus.type()){
     case std::filesystem::file_type::none:
-      message << "Failed to get information about the file " << filePath << ". ";
+      logger.log(Logger::Fatal) << "Failed to get information about the file " << filePath << ". " << '\n';
       if(error){
-        message << error.message();
+        logger.log(Logger::Debug) << error.message() << '\n';
       }
-      quit::failedReadingFiles(message.str());
+      quit::failedReadingFiles();
     case std::filesystem::file_type::not_found:
-      message << filePath << " does not exist. Maybe check for typos.";
-      quit::failedReadingFiles(message.str());
+      logger.log(Logger::Fatal) << filePath << " does not exist. Maybe check for typos." << '\n';
+      quit::failedReadingFiles();
     case std::filesystem::file_type::symlink:
-      message << "You tried to upload the file " << filePath << " , which is a symlink. Those are currently not supported.";
-      quit::failedReadingFiles(message.str());
+      logger.log(Logger::Fatal) << "You tried to upload the file " << filePath << " , which is a symlink. Those are currently not supported." << '\n';
+      quit::failedReadingFiles();
     case std::filesystem::file_type::block:
-      message << "You tried to upload the blockdevice " << filePath << " . Currently only regular files and directories are supported.";
-      quit::failedReadingFiles(message.str());
+      logger.log(Logger::Fatal) << "You tried to upload the blockdevice " << filePath << " . Currently only regular files and directories are supported." << '\n';
+      quit::failedReadingFiles();
     case std::filesystem::file_type::character:
-      message << "You tried to upload the characterdevice " << filePath << " . Currently only regular files and directories are supported.";
-      quit::failedReadingFiles(message.str());
+      logger.log(Logger::Fatal) << "You tried to upload the characterdevice " << filePath << " . Currently only regular files and directories are supported." << '\n';
+      quit::failedReadingFiles();
     case std::filesystem::file_type::fifo:
-      message << "You tried to upload the pipe " << filePath << " . Currently only regular files and directories are supported. Pipes may be supported somewhere in the future.";
-      quit::failedReadingFiles(message.str());
+      logger.log(Logger::Fatal) << "You tried to upload the pipe " << filePath << " . Currently only regular files and directories are supported. Pipes may be supported somewhere in the future." << '\n';
+      quit::failedReadingFiles();
     case std::filesystem::file_type::socket:
-      message << "You tried to upload the socket " << filePath << " . Currently only regular files and directories are supported.";
-      quit::failedReadingFiles(message.str());
+      logger.log(Logger::Fatal) << "You tried to upload the socket " << filePath << " . Currently only regular files and directories are supported." << '\n';
+      quit::failedReadingFiles();
     case std::filesystem::file_type::unknown:
-      message << "Failed to determine to filetype of " << filePath << " . You should check, that you have permissions to access that file. ";
+      logger.log(Logger::Fatal) << "Failed to determine to filetype of " << filePath << " . You should check, that you have permissions to access that file. " << '\n';
       if(error){
-        message << error.message();
+        logger.log(Logger::Debug) << error.message() << '\n';
       }
-      quit::failedReadingFiles(message.str());
+      quit::failedReadingFiles();
     default:
-      message << "You tried to upload a strange filetype " << filePath << " . I do not know how you got here, but you probably know what you did wrong.";
-      quit::failedReadingFiles(message.str());
+      logger.log(Logger::Fatal) << "You tried to upload a strange filetype " << filePath << " . I do not know how you got here, but you probably know what you did wrong." << '\n';
+      quit::failedReadingFiles();
     
     case std::filesystem::file_type::regular:
     case std::filesystem::file_type::directory:
@@ -72,8 +72,8 @@ std::filesystem::path loadPath(const std::string& filePath){
 #ifdef __unix__
       int accessResult = access(filePath.c_str(), R_OK);
       if(accessResult != 0){
-        message << "You do not have the permission to access " << filePath << " . Contact your system administrator about that, or something. You can give everyone read permissions to that file with 'sudo chmod -R a+r " << filePath << "'";
-        quit::failedReadingFiles(message.str());
+        logger.log(Logger::Fatal) << "You do not have the permission to access " << filePath << " . Contact your system administrator about that, or something. You can give everyone read permissions to that file with 'sudo chmod -R a+r " << filePath << "'" << '\n';
+        quit::failedReadingFiles();
       }
 #endif
       return std::filesystem::path(filePath);
@@ -82,15 +82,14 @@ std::filesystem::path loadPath(const std::string& filePath){
 
 File createArchive(const std::vector<std::filesystem::path>& files, const std::string& name, bool directoryCreation){
   miniz_cpp::zip_file file;
-
+  logger.log(Logger::Debug) << "Creating archive " << name << ". " << '\n';
   for(const std::filesystem::path& path : files){
     if(std::filesystem::is_directory(path)){
       std::error_code error;
       std::filesystem::path canonicalPath =  std::filesystem::canonical(path, error);
       if(error){
-        std::stringstream message;
-        message << "Failed to create canonical path of " << path << " . This should not happen.";
-        quit::failedReadingFiles(message.str());
+        logger.log(Logger::Fatal) << "Failed to create canonical path of " << path << " . This should not happen." << '\n';
+        quit::failedReadingFiles();
       }
       
       std::filesystem::path basePath = canonicalPath;

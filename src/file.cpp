@@ -1,9 +1,11 @@
 #include "file.hpp"
+#include "logger.hpp"
 
 File::File(const std::filesystem::path& path){
   std::error_code error;
   if( !std::filesystem::is_regular_file(path, error)){
-    quit::failedReadingFiles("You tried to open something, that is not a regular file. If you see this error message, please open an issue on github.");
+    logger.log(Logger::Fatal) << "You tried to open " << path.string() << ", but that is not a regular file. Actually you should not be able to get this error, because the paths are checked, before opening a file. If you see this error message, please open an issue on github.";
+    quit::failedReadingFiles();
   }
   
   std::ifstream fileStream(path, std::ios::binary | std::ios::in);

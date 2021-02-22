@@ -11,6 +11,7 @@
 #include "quit.hpp"
 #include <future>
 #include "targetloader.hpp"
+#include "logger.hpp"
 
 class Uploader{
   std::list<std::shared_ptr<Target>> targets;

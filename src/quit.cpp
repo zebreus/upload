@@ -4,27 +4,22 @@
   exit(0);
 }
 
-[[ noreturn ]] void quit::failedToUpload(const std::string& message){
-  std::cerr << message << '\n';
+[[ noreturn ]] void quit::failedToUpload(){
   exit(3);
 }
 
-[[ noreturn ]] void quit::noTargetSelected(const std::string& message){
-  std::cerr << message << '\n';
+[[ noreturn ]] void quit::noTargetSelected(){
   exit(4);
 }
 
-[[ noreturn ]] void quit::invalidCliUsage(const std::string& message){
-  std::cerr << message << '\n';
+[[ noreturn ]] void quit::invalidCliUsage(){
   exit(64);
 }
 
-[[ noreturn ]] void quit::failedReadingFiles(const std::string& message){
-  std::cerr << message << '\n';
+[[ noreturn ]] void quit::failedReadingFiles(){
   exit(65);
 }
 
-[[ noreturn ]] void quit::unexpectedFailure(const std::string& message){
-  std::cerr << message << '\n';
+[[ noreturn ]] void quit::unexpectedFailure(){
   exit(1);
 }
