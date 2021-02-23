@@ -1,9 +1,8 @@
 #include "nullpointertarget.hpp"
-#include <httplib.h>
 
 setTargetType(NullPointerTarget)
 
-NullPointerTarget::NullPointerTarget(bool useSSL, const std::string& url = "0x0.st", const std::string& name = "THE NULL POINTER"):  name(name), url(url), useSSL(useSSL){
+NullPointerTarget::NullPointerTarget(bool useSSL, const std::string& url, const std::string& name):  name(name), url(url), useSSL(useSSL), client(nullptr){
   if(useSSL){
     capabilities.http = false;
     capabilities.https = true;
@@ -57,31 +56,22 @@ void NullPointerTarget::dynamicSettingsCheck(BackendRequirements requirements, s
 }
 
 void NullPointerTarget::uploadFile(BackendRequirements requirements, const File& file, std::function<void(std::string)> successCallback, std::function<void(std::string)> errorCallback){
-
-  
-  httplib::Client cli(httpUrl.c_str());
-  //cli.set_ca_cert_path("libs/cpp-httplib/example/ca-bundle.crt");
-  
-  httplib::Headers headers = {
-    { "Accept", "*/*" },
-    { "User-Agent", userAgent }
-  };
   
   httplib::MultipartFormDataItems items = {
     { "file", file.getContent(), file.getName(), "application/octet-stream" }
   };
   
-  if(auto res = cli.Post("/", headers, items)){
+  if(auto result = client->Post("/", items)){
     //cli.set_follow_location(true);
-    logger.log(Logger::Topic::Debug) << "Received response from " << name << " (" << res->status << "): " << res->body << '\n';
-    if(res->status != 200){
+    logger.log(Logger::Topic::Debug) << "Received response from " << name << " (" << result->status << "): " << result->body << '\n';
+    if(result->status != 200){
       std::stringstream message;
-      message << "Request failed, responsecode " << httplib::detail::status_message(res->status) << "(" << res->status << ")." ;
+      message << "Request failed, responsecode " << httplib::detail::status_message(result->status) << "(" << result->status << ")." ;
       errorCallback(message.str());
       return;
     }
     
-    std::string content = res->body;
+    std::string content = result->body;
     //TODO improve expression
     std::regex urlExpression("http[-\\]_.~!*'();:@&=+$,/?%#[A-z0-9]+", std::regex::icase | std::regex::ECMAScript);
     std::smatch results;
@@ -105,14 +95,14 @@ void NullPointerTarget::uploadFile(BackendRequirements requirements, const File&
     }
   }else{
     std::stringstream message;
-    message << "Request failed, responsecode " << res.error() << "." ;
+    message << "Request failed, responsecode " << result.error() << "." ;
     errorCallback(message.str());
     return;
   }
 }
 
 bool NullPointerTarget::isReachable(std::string& errorMessage){
-  if(auto result = client.Post("/")){
+  if(auto result = client->Post("/")){
     //client.set_follow_location(true);
     logger.log(Logger::Topic::Debug) << "Received response from " << name << " (" << result->status << "): " << result->body << '\n';
     if(result->status == 200 || result->status == 400){
@@ -146,7 +136,7 @@ bool NullPointerTarget::isReachable(std::string& errorMessage){
 }
 
 bool NullPointerTarget::checkFile(const File& file) const{
-
+  std::string mimetype = file.getMimetype();
   
   if(
     mimetype == "application/x-dosexec" ||
@@ -160,46 +150,77 @@ bool NullPointerTarget::checkFile(const File& file) const{
     return false;
   }
   
-  if(file.getContent().size() > 536870912){
+  if(file.getContent().size() > capabilities.maxSize){
     logger.log(Logger::Topic::Info) << name << " has a size limit of 512 MiB per file." << '\n';
     return false;
   }
   return true;
 }
 
-std::vector<Target*> NullPointerTarget::loadTargets(){
-  Target* myTarget = new NullPointerTarget();
-  return std::vector<Target*>{myTarget};
-}
-
-/*
-std::string NullPointerTarget::generateUrl(){
-  std::string httpUrl
-  if(useSSL){
-    httpUrl = "https://";
-  }else{
-    httpUrl = "http://";
-  }
-  httpUrl.append(url);
-  return url;
-}
-* */
-
 void NullPointerTarget::initializeClient(){
   if(client == nullptr){
     if(useSSL){
-      httplib::SSLClient* httpsClient = new httplib::SSLClient(url);
-      httpsClient.set_ca_cert_path("libs/cpp-httplib/example/ca-bundle.crt");
-      client = httpsClient;
+      std::string httpsUrl = "https://";
+      httpsUrl.append(url);
+      client = new httplib::Client(httpsUrl.c_str());
+      const char* path = "libs/cpp-httplib/example/ca-bundle.crt";
+      auto setCerts = []<typename T>(T client, const char* certs) {
+        if constexpr(requires{
+          client->set_ca_cert_path(certs);
+        }){
+          client->set_ca_cert_path(certs);
+          logger.log(Logger::Topic::Debug) << "HTTPS is supported\n";
+        }else{
+          logger.log(Logger::Topic::Debug) << "HTTPS is not supported\n";
+          throw std::invalid_argument("https is disabled");
+        }
+      };
+      setCerts(client, path);
     }else{
-      httplib::Client* httpClient = new httplib::SSLClient(url);
-      client = httpClient;
+      std::string httpUrl = "http://";
+      httpUrl.append(url);
+      client = new httplib::Client(httpUrl.c_str());
     }
     
     httplib::Headers headers = {
       { "Accept", "*/*" },
       { "User-Agent", userAgent }
     };
-    client.set_default_headers(headers);
+    client->set_default_headers(headers);
   }
+}
+
+long long NullPointerTarget::calculateRetentionPeriod(const File& f) const{
+  long long min_age = capabilities.minRetention;
+  long long max_age = capabilities.maxRetention;
+  long long max_size = capabilities.maxSize;
+  long long file_size = f.getContent().size();
+  long long retention = min_age + (-max_age + min_age) * pow((file_size / max_size - 1), 3);
+  if(retention < min_age){
+    return min_age;
+  }else if(retention > max_age){
+    return max_age;
+  }else{
+    return retention;
+  }
+}
+
+std::vector<Target*> NullPointerTarget::loadTargets(){
+  std::vector<Target*> targets;
+  
+  try{
+    Target* httpTarget = new NullPointerTarget(false, "0x0.st", "THE NULL POINTER (HTTP)");
+    targets.push_back(httpTarget);
+  }catch(std::invalid_argument& e){
+    logger.log(Logger::Info) << "Failed to load nullpointertarget (http):" << e.what() << "\n";
+  }
+  
+  try{
+    Target* httpsTarget = new NullPointerTarget(true, "0x0.st", "THE NULL POINTER");
+    targets.push_back(httpsTarget);
+  }catch(std::invalid_argument& e){
+    logger.log(Logger::Info) << "Failed to load nullpointertarget (https):" << e.what() << "\n";
+  }
+  
+  return targets;
 }

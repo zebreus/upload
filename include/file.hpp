@@ -4,7 +4,6 @@
 #include <string>
 #include <fstream>
 #include <filesystem>
-//#include "quit.hpp"
 
 class File{
   std::string name;
@@ -14,6 +13,7 @@ public:
   File(const std::string& name, const std::string& content);
   std::string getName() const;
   std::string getContent() const;
+  std::string getMimetype() const;
 };
 
 #endif

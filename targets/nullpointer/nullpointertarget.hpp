@@ -5,15 +5,17 @@
 #include <string>
 #include <regex>
 #include <logger.hpp>
+#include <httplib.h>
+#include <variant>
 
 class NullPointerTarget : public Target {
   static constexpr auto userAgent = "upload/0.0";
   
   std::string name;
   std::string url;
-  bool useSSL;
+  const bool useSSL;
   BackendCapabilities capabilities;
-  httplib::ClientImpl* client;
+  httplib::Client* client;
   
 public:
   NullPointerTarget(bool useSSL, const std::string& url = "0x0.st", const std::string& name = "THE NULL POINTER");
@@ -27,7 +29,8 @@ public:
 private:
   bool isReachable(std::string& errorMessage);
   bool checkFile(const File& f) const;
-  void NullPointerTarget::initializeClient();
+  void initializeClient();
+  long long calculateRetentionPeriod(const File& f) const;
 };
 
 #endif
