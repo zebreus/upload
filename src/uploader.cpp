@@ -59,6 +59,31 @@ void Uploader::printAvailableTargets(){
 
 void Uploader::initializeTargets(const Settings& settings){
   std::vector<std::shared_ptr<Target>> loadedTargets = loadTargets();
+  
+  //Find all targets with a requested name, possibly multiple with the same name, but none twice
+  if(settings.getRequestedTargets().size() > 0){
+    std::vector<std::shared_ptr<Target>> unmatchedTargets = loadedTargets;
+    std::vector<std::shared_ptr<Target>> orderedTargets;
+    std::vector<std::shared_ptr<Target>> nextTargets;
+    for(const std::string& targetName : settings.getRequestedTargets()){
+      bool found = false;
+      for(const std::shared_ptr<Target>& target : unmatchedTargets){
+        if(target->getName() == targetName){
+          orderedTargets.push_back(target);
+          found = true;
+        }else{
+          nextTargets.push_back(target);
+        }
+      }
+      if(!found){
+        logger.log(Logger::Topic::Fatal) << "Unable to find requested target '" << targetName << "'. Maybe check for a typo in its name.";
+        quit::invalidCliUsage();
+      }
+      unmatchedTargets = nextTargets;
+    }
+    loadedTargets = orderedTargets;
+  }
+  
   for(std::shared_ptr<Target> target: loadedTargets){
     if(target->staticSettingsCheck(settings.getBackendRequirements())){
       logger.log(Logger::Debug) << target->getName() << " has all required features." << '\n';

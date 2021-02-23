@@ -99,7 +99,7 @@ void Settings::parseOptions(int argc, char** argv){
   archiveType = parseArchiveType(result);
   httpsSetting = parseHttpsSetting(result);
   if(result.count("target")){
-    requestedTargets = result["file"].template as<std::vector<std::string>>();
+    requestedTargets = result["target"].template as<std::vector<std::string>>();
   }
   archiveName = parseArchiveName(result, archiveType);
   preserveName = result.count("preserve-name");
