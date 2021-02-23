@@ -61,7 +61,7 @@ $(STATIC_TARGET_LIBS): $(BUILD_DIR)/lib%.a :
 $(SHARED_TARGET_LIBS): $(BUILD_DIR)/lib%.so :
 	$(MAKE) -C $(TARGETS_DIR)/$* $(TARGETS_BUILD_DIR)/lib$*.so
 
-.PHONY: clean
+.PHONY: clean $(SHARED_TARGET_LIBS) $(STATIC_TARGET_LIBS)
 
 -include $(DEPS)
 
