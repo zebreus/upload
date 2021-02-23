@@ -29,8 +29,10 @@ protected:
   std::string getErrorMessage(httplib::Error error);
   bool checkMimetype(const File& file, const std::vector<std::string>& blacklist) const;
   std::string postForm(const httplib::MultipartFormDataItems& form);
-  std::string putFile(const File& file);
+  std::string putFile(const File& file, const httplib::Headers& headers = {});
   std::vector<std::string> findValidUrls(const std::string& input);
+  long long determineRetention(BackendRequirements requirements);
+  long determineMaxDownloads(BackendRequirements requirements);
 };
 
 inline HttplibTarget::HttplibTarget(bool useSSL, const std::string& url, const std::string& name):  name(name), url(url), useSSL(useSSL), client(nullptr){
@@ -165,7 +167,7 @@ inline bool HttplibTarget::checkMimetype(const File& file, const std::vector<std
   return true;
 }
 
-std::string HttplibTarget::postForm(const httplib::MultipartFormDataItems& form){
+inline std::string HttplibTarget::postForm(const httplib::MultipartFormDataItems& form){
   if(auto result = client->Post("/", form)){
     logger.log(Logger::Topic::Debug) << "Received response from " << name << " (" << result->status << "): " << result->body << '\n';
     if(result->status != 200){
@@ -182,10 +184,10 @@ std::string HttplibTarget::postForm(const httplib::MultipartFormDataItems& form)
   }
 }
 
-std::string HttplibTarget::putFile(const File& file){
+inline std::string HttplibTarget::putFile(const File& file, const httplib::Headers& headers){
   std::string path = "/";
   path.append(file.getName());
-  if(auto result = client->Put(path.c_str(), file.getContent().data(), file.getContent().size(), file.getMimetype().c_str())){
+  if(auto result = client->Put(path.c_str(), headers, file.getContent().data(), file.getContent().size(), file.getMimetype().c_str())){
     logger.log(Logger::Topic::Debug) << "Received response from " << name << " (" << result->status << "): " << result->body << '\n';
     if(result->status != 200){
       std::stringstream message;
@@ -202,7 +204,7 @@ std::string HttplibTarget::putFile(const File& file){
 }
 
 
-std::vector<std::string> HttplibTarget::findValidUrls(const std::string& input){
+inline std::vector<std::string> HttplibTarget::findValidUrls(const std::string& input){
     //TODO improve expression
     std::regex urlExpression("http[-\\]_.~!*'();:@&=+$,/?%#[A-z0-9]+", std::regex::icase | std::regex::ECMAScript);
     std::smatch results;
@@ -214,4 +216,28 @@ std::vector<std::string> HttplibTarget::findValidUrls(const std::string& input){
     return resultsVector;
 }
 
+inline long long HttplibTarget::determineRetention(BackendRequirements requirements){
+  //Assumes that a valid retention duration exists
+  long long period = capabilities.maxRetention;
+  if(requirements.maxRetention != nullptr){
+    if(*requirements.maxRetention < period){
+      period = *requirements.maxRetention;
+    }
+  }
+  return period;
+}
+
+inline long HttplibTarget::determineMaxDownloads(BackendRequirements requirements){
+  //Assumes that a valid download limit exists
+  long maxDownloads = LONG_MAX;
+  if(capabilities.maxDownloads != nullptr){
+    maxDownloads = *capabilities.maxDownloads;
+  }
+  if(requirements.maxDownloads != nullptr){
+    if(*requirements.maxDownloads < maxDownloads){
+      maxDownloads = *requirements.maxDownloads;
+    }
+  }
+  return maxDownloads;
+}
 #endif

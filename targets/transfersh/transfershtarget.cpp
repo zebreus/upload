@@ -5,25 +5,35 @@ setTargetType(TransferShTarget)
 TransferShTarget::TransferShTarget(bool useSSL, const std::string& url, const std::string& name): HttplibTarget(useSSL,url,name){
   capabilities.maxSize = (long long)10*1024*1024*1024;
   capabilities.preserveName.reset(new bool(true));
-  capabilities.minRetention = (long long)14*24*60*60*1000;
+  capabilities.minRetention = (long long)1*24*60*60*1000;
   capabilities.maxRetention = (long long)14*24*60*60*1000;
-}
-
-bool TransferShTarget::staticFileCheck(BackendRequirements requirements, const File& file) const{
-  if(!checkFile(file)){
-    return false;
-  }
-  
-  return true;
+  capabilities.maxDownloads.reset(new long(LONG_MAX));
 }
 
 void TransferShTarget::uploadFile(BackendRequirements requirements, const File& file, std::function<void(std::string)> successCallback, std::function<void(std::string)> errorCallback){
-
+  
+  httplib::Headers headers;
+  long long retentionPeriod = determineRetention(requirements);
+  int retentionDays = retentionPeriod / (24ll*60*60*1000);
+  headers.insert({"Max-Days", std::to_string(retentionDays)});
+  
+  if(requirements.maxDownloads != nullptr){
+    int maxDownloads = determineMaxDownloads(requirements);
+    headers.insert({"Max-Downloads", std::to_string(maxDownloads)});
+  }
+  
   try{
-    std::string response = putFile(file);
+    std::string response = putFile(file, headers);
     std::vector<std::string> urls = findValidUrls(response);
     if(urls.size()>=1){
-      successCallback(urls.front());
+      std::string resultUrl = urls.front();
+      int afterHost = resultUrl.find(url) + url.size() + 1;
+      try{
+        resultUrl.insert(afterHost, "get/");
+        successCallback(resultUrl);
+      }catch(...){
+        errorCallback("Result url was not formed as expected.");
+      }
     }else{
       std::string message = "Response did not contain any urls";
       errorCallback(message);
