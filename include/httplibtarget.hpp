@@ -29,6 +29,7 @@ protected:
   std::string getErrorMessage(httplib::Error error);
   bool checkMimetype(const File& file, const std::vector<std::string>& blacklist) const;
   std::string postForm(const httplib::MultipartFormDataItems& form);
+  std::string putFile(const File& file);
   std::vector<std::string> findValidUrls(const std::string& input);
 };
 
@@ -180,6 +181,26 @@ std::string HttplibTarget::postForm(const httplib::MultipartFormDataItems& form)
     throw(std::runtime_error(message.str()));
   }
 }
+
+std::string HttplibTarget::putFile(const File& file){
+  std::string path = "/";
+  path.append(file.getName());
+  if(auto result = client->Put(path.c_str(), file.getContent().data(), file.getContent().size(), file.getMimetype().c_str())){
+    logger.log(Logger::Topic::Debug) << "Received response from " << name << " (" << result->status << "): " << result->body << '\n';
+    if(result->status != 200){
+      std::stringstream message;
+      message << "Request failed, responsecode " << httplib::detail::status_message(result->status) << "(" << result->status << ")." ;
+      throw(std::runtime_error(message.str()));
+    }
+    
+    return result->body;
+  }else{
+    std::stringstream message;
+    message << "Request failed, responsecode " << result.error() << "." ;
+    throw(std::runtime_error(message.str()));
+  }
+}
+
 
 std::vector<std::string> HttplibTarget::findValidUrls(const std::string& input){
     //TODO improve expression
