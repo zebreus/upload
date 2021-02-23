@@ -3,16 +3,24 @@
 
 setTargetType(NullPointerTarget)
 
-NullPointerTarget::NullPointerTarget(){
-  capabilities.http = true;
-  capabilities.https = false;
-  capabilities.maxSize = 536870912;
+NullPointerTarget::NullPointerTarget(bool useSSL, const std::string& url = "0x0.st", const std::string& name = "THE NULL POINTER"):  name(name), url(url), useSSL(useSSL){
+  if(useSSL){
+    capabilities.http = false;
+    capabilities.https = true;
+  }else{
+    capabilities.http = true;
+    capabilities.https = false;
+  }
+  capabilities.maxSize = 512*1024*1024;
   capabilities.preserveName.reset(new bool(false));
   capabilities.minRetention = (long long)30*24*60*60*1000;
   capabilities.maxRetention = (long long)365*24*60*60*1000;
+  
+  initializeClient();
 }
 
 NullPointerTarget::~NullPointerTarget(){
+  delete client;
 }
 
 std::string NullPointerTarget::getName() const{
@@ -39,7 +47,7 @@ bool NullPointerTarget::staticFileCheck(BackendRequirements requirements, const 
   return true;
 }
 
-void NullPointerTarget::dynamicSettingsCheck(BackendRequirements requirements, std::function<void()> successCallback, std::function<void(std::string)> errorCallback, int timeoutMillis){  
+void NullPointerTarget::dynamicSettingsCheck(BackendRequirements requirements, std::function<void()> successCallback, std::function<void(std::string)> errorCallback, int timeoutMillis){
   std::string errorMessage;
   if(isReachable(errorMessage)){
     successCallback();
@@ -49,8 +57,8 @@ void NullPointerTarget::dynamicSettingsCheck(BackendRequirements requirements, s
 }
 
 void NullPointerTarget::uploadFile(BackendRequirements requirements, const File& file, std::function<void(std::string)> successCallback, std::function<void(std::string)> errorCallback){
-  std::string httpUrl = "http://";
-  httpUrl.append(url);
+
+  
   httplib::Client cli(httpUrl.c_str());
   //cli.set_ca_cert_path("libs/cpp-httplib/example/ca-bundle.crt");
   
@@ -104,20 +112,10 @@ void NullPointerTarget::uploadFile(BackendRequirements requirements, const File&
 }
 
 bool NullPointerTarget::isReachable(std::string& errorMessage){
-  std::string httpUrl = "http://";
-  httpUrl.append(url);
-  httplib::Client cli(httpUrl.c_str());
-  //cli.set_ca_cert_path("libs/cpp-httplib/example/ca-bundle.crt");
-  
-  httplib::Headers headers = {
-    { "Accept", "*/*" },
-    { "User-Agent", userAgent }
-  };
-  cli.set_default_headers(headers);
-  if(auto res = cli.Post("/")){
-    //cli.set_follow_location(true);
-    logger.log(Logger::Topic::Debug) << "Received response from " << name << " (" << res->status << "): " << res->body << '\n';
-    if(res->status == 200 || res->status == 400){
+  if(auto result = client.Post("/")){
+    //client.set_follow_location(true);
+    logger.log(Logger::Topic::Debug) << "Received response from " << name << " (" << result->status << "): " << result->body << '\n';
+    if(result->status == 200 || result->status == 400){
       return true;
     }else{
       errorMessage = "Received an unexpected reply. This should not happen.";
@@ -125,7 +123,7 @@ bool NullPointerTarget::isReachable(std::string& errorMessage){
     }
   }else{
     std::stringstream message;
-    switch(res.error()){
+    switch(result.error()){
       case httplib::Connection:
       case httplib::BindIPAddress:
       message << name << " is not online. Check your internet connection.";
@@ -148,13 +146,7 @@ bool NullPointerTarget::isReachable(std::string& errorMessage){
 }
 
 bool NullPointerTarget::checkFile(const File& file) const{
-  std::map<std::string, std::string> customTypes;
-  customTypes["he5"] = "application/x-hdf5";
-  customTypes["hdf5"] = "application/x-hdf5";
-  customTypes["h5"] = "application/x-hdf5";
-  customTypes["apk"] = "application/vnd.android.package-archive";
-  customTypes["jar"] = "application/java-archive";
-  std::string mimetype = httplib::detail::find_content_type(file.getName(), customTypes);
+
   
   if(
     mimetype == "application/x-dosexec" ||
@@ -178,4 +170,36 @@ bool NullPointerTarget::checkFile(const File& file) const{
 std::vector<Target*> NullPointerTarget::loadTargets(){
   Target* myTarget = new NullPointerTarget();
   return std::vector<Target*>{myTarget};
+}
+
+/*
+std::string NullPointerTarget::generateUrl(){
+  std::string httpUrl
+  if(useSSL){
+    httpUrl = "https://";
+  }else{
+    httpUrl = "http://";
+  }
+  httpUrl.append(url);
+  return url;
+}
+* */
+
+void NullPointerTarget::initializeClient(){
+  if(client == nullptr){
+    if(useSSL){
+      httplib::SSLClient* httpsClient = new httplib::SSLClient(url);
+      httpsClient.set_ca_cert_path("libs/cpp-httplib/example/ca-bundle.crt");
+      client = httpsClient;
+    }else{
+      httplib::Client* httpClient = new httplib::SSLClient(url);
+      client = httpClient;
+    }
+    
+    httplib::Headers headers = {
+      { "Accept", "*/*" },
+      { "User-Agent", userAgent }
+    };
+    client.set_default_headers(headers);
+  }
 }
