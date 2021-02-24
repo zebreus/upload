@@ -54,8 +54,8 @@ inline HttplibTarget::HttplibTarget(bool useSSL, const std::string& url, const s
     capabilities.https = false;
   }
   capabilities.maxSize = 0;
-  capabilities.minRetention = (long long)0;
-  capabilities.maxRetention = (long long)0;
+  capabilities.minRetention = 0ll;
+  capabilities.maxRetention = 0ll;
 
   initializeClient();
 }
@@ -153,6 +153,10 @@ inline std::string HttplibTarget::getErrorMessage(httplib::Error error) {
     case httplib::ExceedRedirectCount:
       message << "Too many redirects. This is probably not your fault.";
       break;
+    case httplib::Success:
+    case httplib::Unknown:
+    case httplib::UnsupportedMultipartBoundaryChars:
+    case httplib::Compression:
     default:
       message << "Failed to establish connection. Maybe try again later.";
   }
@@ -182,7 +186,7 @@ inline std::string HttplibTarget::postForm(const httplib::MultipartFormDataItems
     return result->body;
   } else {
     std::stringstream message;
-    message << "Request failed, responsecode " << result.error() << ".";
+    message << "Request failed: " << getErrorMessage(result.error()) << ".";
     throw(std::runtime_error(message.str()));
   }
 }
@@ -201,7 +205,7 @@ inline std::string HttplibTarget::putFile(const File& file, const httplib::Heade
     return result->body;
   } else {
     std::stringstream message;
-    message << "Request failed, responsecode " << result.error() << ".";
+    message << "Request failed: " << getErrorMessage(result.error()) << ".";
     throw(std::runtime_error(message.str()));
   }
 }

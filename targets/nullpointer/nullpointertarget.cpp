@@ -6,8 +6,8 @@ setTargetType(NullPointerTarget)
     : HttplibTarget(useSSL, url, name) {
   capabilities.maxSize = 512 * 1024 * 1024;
   capabilities.preserveName.reset(new bool(false));
-  capabilities.minRetention = (long long)30 * 24 * 60 * 1000;
-  capabilities.maxRetention = (long long)365 * 24 * 60 * 1000;
+  capabilities.minRetention = 30ll * 24 * 60 * 1000;
+  capabilities.maxRetention = 365ll * 24 * 60 * 1000;
 }
 
 bool NullPointerTarget::staticFileCheck(BackendRequirements requirements, const File& file) const {
@@ -63,8 +63,8 @@ void NullPointerTarget::uploadFile(BackendRequirements requirements,
 long long NullPointerTarget::calculateRetentionPeriod(const File& f) const {
   long long min_age = capabilities.minRetention;
   long long max_age = capabilities.maxRetention;
-  long long max_size = capabilities.maxSize;
-  long long file_size = f.getContent().size();
+  size_t max_size = capabilities.maxSize;
+  size_t file_size = f.getContent().size();
   long long retention = min_age + (-max_age + min_age) * pow((file_size / max_size - 1), 3);
   if(retention < min_age) {
     return min_age;

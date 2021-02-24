@@ -35,7 +35,7 @@ concept ValidTarget = requires(T a) {
 };
 
 extern "C" struct TargetList {
-  int size;
+  unsigned int size;
   Target** targets;
 };
 
@@ -43,6 +43,7 @@ extern "C" struct TargetList {
 // You need to use this makro (or define 'TargetList load_targets_dynamically()' yourself) in your target module, if you want it to be
 // dynamically loadable.
 #define setTargetType(type)                                                                                                              \
+  extern "C" TargetList __attribute__((weak)) load_targets_dynamically();                                                                \
   extern "C" TargetList __attribute__((weak)) load_targets_dynamically() {                                                               \
     static_assert(std::is_base_of<Target, type>::value,                                                                                  \
                   "You have to call the setTargetType makro with your target type like 'setTargetType(NullPointerTarget)'. Your target " \
@@ -54,7 +55,7 @@ extern "C" struct TargetList {
     TargetList targetList;                                                                                                               \
     targetList.size = targets.size();                                                                                                    \
     targetList.targets = new Target*[targets.size()];                                                                                    \
-    for(int i = 0; i < targetList.size; i++) {                                                                                           \
+    for(unsigned int i = 0; i < targetList.size; i++) {                                                                                  \
       targetList.targets[i] = targets[i];                                                                                                \
     }                                                                                                                                    \
     return targetList;                                                                                                                   \

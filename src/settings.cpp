@@ -54,6 +54,7 @@ BackendRequirements Settings::getBackendRequirements() const {
       requirements.http.reset(new bool(false));
       requirements.https.reset(new bool(true));
       break;
+    case HttpsSetting::Allow:
     default:
       break;
   }
@@ -107,7 +108,7 @@ void Settings::parseOptions(int argc, char** argv) {
     archiveName = parseArchiveName(result, archiveType);
     preserveName = result.count("preserve-name");
     directoryArchive = parseDirectoryArchive(result, mode);
-  } catch(cxxopts::OptionException e) {
+  } catch(const cxxopts::OptionException& e) {
     logger.log(Logger::Fatal) << e.what() << '\n';
     quit::invalidCliUsage();
   }
@@ -232,10 +233,10 @@ std::string Settings::parseArchiveName(const auto& parseResult, Settings::Archiv
 
   std::string name;
 
-  int nameLength = 8;
+  unsigned int nameLength = 8;
   name.reserve(nameLength + 1);
   srand(time(NULL));
-  for(int x = 0; x < nameLength; x++) {
+  for(unsigned int x = 0; x < nameLength; x++) {
     name.push_back(65 + (rand() % 2) * 32 + (rand() % 26));
   }
 

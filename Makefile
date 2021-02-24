@@ -5,15 +5,19 @@ SRC_DIR := src
 # Upload will load plugins from here
 INSTALL_PLUGIN_DIR := $(abspath $(BUILD_DIR))
 
-WARNING_FLAGS := -pedantic -Wall -Wextra -Wcast-align -Wcast-qual -Wctor-dtor-privacy -Wdisabled-optimization -Wformat=2 -Winit-self -Wlogical-op -Wmissing-declarations -Wmissing-include-dirs -Wnoexcept -Wold-style-cast -Woverloaded-virtual -Wredundant-decls -Wshadow -Wsign-conversion -Wsign-promo -Wstrict-null-sentinel -Wstrict-overflow=5 -Wswitch-default -Wundef -Werror -Wno-unused
+GCC_WARNING_FLAGS := -pedantic -Wall -Wextra -Wcast-align -Wcast-qual -Wctor-dtor-privacy -Wdisabled-optimization -Wformat=2 -Winit-self -Wlogical-op -Wmissing-declarations -Wmissing-include-dirs -Wnoexcept -Wold-style-cast -Woverloaded-virtual -Wredundant-decls -Wsign-conversion -Wsign-promo -Wstrict-null-sentinel -Wstrict-overflow=2 -Wswitch-default -Wundef -Werror -Wno-unused -Wswitch-enum -Wzero-as-null-pointer-constant -Wuseless-cast
+
+CLANG_WARNING_FLAGS := -Weverything
+
+#Currently disabled: -Wunsafe-loop-optimizations -Wshadow 
+# Additional -pedantic  -pedantic-errors -Wextra -Waggregate-return -Wcast-align -Wcast-qual -Wconversion -Wdisabled-optimization -Werror -Wfloat-equal -Wformat=2 -Wformat-nonliteral -Wformat-security  -Wformat-y2k -Wimplicit  -Wimport  -Winit-self  -Winline -Winvalid-pch   -Wlong-long -Wmissing-field-initializers -Wmissing-format-attribute -Wmissing-include-dirs -Wmissing-noreturn -Wpacked  -Wpadded -Wpointer-arith -Wredundant-decls -Wshadow -Wstack-protector -Wstrict-aliasing=2 -Wswitch-default -Wswitch-enum -Wunreachable-code -Wunused -Wunused-parameter -Wvariadic-macros -Wwrite-strings
 
 CXX=g++
-MKDIR := mkdir -p
+MKDIR=mkdir -p
 MAKEOVERRIDES += CXX:=$(CXX)
-MAKEOVERRIDES += MKDIR:=$(MKDIR)
 
-export COMMON_CXX_FLAGS :=  -std=c++2a -O3 $(WARNING_FLAGS)
-export COMMON_LD_FLAGS :=  -std=c++2a -O3 $(WARNING_FLAGS)
+export COMMON_CXX_FLAGS :=  -std=c++2a -O3 $(GCC_WARNING_FLAGS)
+export COMMON_LD_FLAGS :=  -std=c++2a -O3 $(GCC_WARNING_FLAGS)
 
 TARGETS_DIR = targets
 TARGETS_BUILD_DIR = ../../$(BUILD_DIR)
@@ -26,11 +30,11 @@ SHARED_TARGET_LIBS = $(TARGETS:%=$(BUILD_DIR)/lib%.so)
 DYNAMIC := yeah
 
 UPLOAD := upload
-INCLUDE_DIRS += include
-INCLUDE_DIRS += $(LIB_DIR)/cxxopts/include
-INCLUDE_DIRS += $(LIB_DIR)/miniz-cpp
-INCLUDE_DIRS += $(SRC_DIR)
-INCLUDE_FLAGS := $(INCLUDE_DIRS:%=-I%)
+INCLUDE_FLAGS += -Iinclude
+INCLUDE_FLAGS += -isystem $(LIB_DIR)/cxxopts/include
+INCLUDE_FLAGS += -isystem $(LIB_DIR)/miniz-cpp
+INCLUDE_FLAGS += -isystem $(LIB_DIR)/cpp-httplib
+INCLUDE_FLAGS += -I$(SRC_DIR)
 CXX_FLAGS := $(COMMON_CXX_FLAGS) $(INCLUDE_FLAGS) -MMD -MP -pthread -DUPLOAD_PLUGIN_DIR=$(INSTALL_PLUGIN_DIR)
 LD_FLAGS := $(COMMON_LD_FLAGS) -pthread -lcrypto -lssl 
 SRCS := $(wildcard $(SRC_DIR)/*.cpp)
@@ -61,7 +65,7 @@ $(BUILD_DIR)/$(UPLOAD): $(OBJS) $(STATIC_TARGET_LIBS)
 endif
 
 # c++ source
-$(OBJS): $(BUILD_DIR)/%.cpp.o: %.cpp
+$(BUILD_DIR)/%.cpp.o: %.cpp
 	$(MKDIR) $(dir $@)
 	$(CXX) $(CXX_FLAGS) -c $< -o $@
 

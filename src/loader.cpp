@@ -5,6 +5,9 @@
 std::vector<File> loadFiles(const Settings& settings) {
   std::vector<File> result;
   switch(settings.getMode()) {
+    default:
+      logger.log(Logger::Topic::Debug) << "Unknown mode.";
+      break;
     case Settings::Mode::List:
       break;
     case Settings::Mode::Individual:

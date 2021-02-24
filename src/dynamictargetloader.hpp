@@ -6,7 +6,7 @@
 
 #include <dlfcn.h>
 
-std::vector<std::shared_ptr<Target>> loadTargetsFromFile(const std::filesystem::path& file) {
+inline std::vector<std::shared_ptr<Target>> loadTargetsFromFile(const std::filesystem::path& file) {
   void* handle = dlopen(file.c_str(), RTLD_LAZY);
 
   if(handle == NULL) {
@@ -18,7 +18,7 @@ std::vector<std::shared_ptr<Target>> loadTargetsFromFile(const std::filesystem::
   }
   TargetList (*load_targets_dynamically)();
   dlerror();
-  load_targets_dynamically = (TargetList(*)())dlsym(handle, "load_targets_dynamically");
+  load_targets_dynamically = reinterpret_cast<TargetList (*)()>(dlsym(handle, "load_targets_dynamically"));
   const char* errorMessage = dlerror();
   if(errorMessage != NULL) {
     // Library does not contain 'TargetList load_targets_dynamically()'
@@ -30,9 +30,9 @@ std::vector<std::shared_ptr<Target>> loadTargetsFromFile(const std::filesystem::
     logger.log(Logger::Debug) << "This is the error message from your system: " << errorMessage << '\n';
     return std::vector<std::shared_ptr<Target>>{};
   }
-  TargetList loadedTargetList = (TargetList)load_targets_dynamically();
+  TargetList loadedTargetList = load_targets_dynamically();
   std::vector<std::shared_ptr<Target>> loadedTargets;
-  for(int i = 0; i < loadedTargetList.size; i++) {
+  for(unsigned int i = 0; i < loadedTargetList.size; i++) {
     loadedTargets.push_back(std::shared_ptr<Target>(loadedTargetList.targets[i]));
   }
 
@@ -41,7 +41,7 @@ std::vector<std::shared_ptr<Target>> loadTargetsFromFile(const std::filesystem::
   return loadedTargets;
 }
 
-std::vector<std::filesystem::path> findLibraries() {
+inline std::vector<std::filesystem::path> findLibraries() {
   std::string pluginDirectory;
 #ifndef UPLOAD_PLUGIN_DIR
 #warning "No plugin directory specified. You should define UPLOAD_PLUGIN_DIR as the directory where you want to load plugins from"

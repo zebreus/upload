@@ -26,7 +26,7 @@ class Uploader {
  private:
   std::string uploadFile(const File& file, std::shared_ptr<Target> target);
   void printAvailableTargets();
-  void initializeTargets(const Settings& settings);
+  void initializeTargets();
   void checkNextTarget();
   void checkNextTarget(std::promise<std::shared_ptr<Target>>& promise);
 };

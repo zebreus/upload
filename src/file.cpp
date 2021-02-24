@@ -16,8 +16,15 @@ File::File(const std::filesystem::path& path) {
 
   std::ifstream fileStream(path, std::ios::binary | std::ios::in);
   fileStream.seekg(0, std::ios::end);
-  size_t size = fileStream.tellg();
-  content.resize(size);
+  long int size = fileStream.tellg();
+  if(size < 0) {
+    logger.log(Logger::Fatal) << "You tried to open " << path.string()
+                              << ", but reading that file failed. Actually you should not be able to get this error, because the paths are "
+                                 "checked, before opening a file. Maybe you are doing something strange?";
+    quit::failedReadingFiles();
+  }
+
+  content.resize(static_cast<unsigned>(size));
   fileStream.seekg(0);
   fileStream.read(&content[0], size);
 

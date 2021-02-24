@@ -1,7 +1,7 @@
 #include "uploader.hpp"
 
 Uploader::Uploader(const Settings& settings): settings(settings) {
-  initializeTargets(settings);
+  initializeTargets();
   if(settings.getMode() == Settings::Mode::List) {
     printAvailableTargets();
     quit::success();
@@ -12,7 +12,7 @@ std::string Uploader::uploadFile(const File& file) {
   for(const std::shared_ptr<Target>& target : checkedTargets) {
     try {
       return uploadFile(file, target);
-    } catch(std::runtime_error e) {
+    } catch(const std::runtime_error& e) {
       logger.log(Logger::Info) << "Failed to upload " << file.getName() << " to " << target->getName() << ". " << e.what() << '\n';
     } catch(...) {
       logger.log(Logger::Info) << "Unexpected error while uploading " << file.getName() << " to " << target->getName() << "." << '\n';
@@ -24,7 +24,7 @@ std::string Uploader::uploadFile(const File& file) {
     std::shared_ptr<Target> target = checkedTargets.back();
     try {
       return uploadFile(file, target);
-    } catch(std::runtime_error e) {
+    } catch(const std::runtime_error& e) {
       logger.log(Logger::Info) << "Failed to upload " << file.getName() << " to " << target->getName() << ". " << e.what() << '\n';
     } catch(...) {
       logger.log(Logger::Info) << "Unexpected error while uploading " << file.getName() << " to " << target->getName() << "." << '\n';
@@ -40,7 +40,7 @@ std::string Uploader::uploadFile(const File& file, std::shared_ptr<Target> targe
       [this, &urlPromise](std::string url) {
         try {
           urlPromise.set_value(url);
-        } catch(std::exception e) {
+        } catch(const std::exception& e) {
           logger.log(Logger::Fatal) << "Failed to set urlPromise value. If your are compiling this code yourself, you probably forgot to "
                                        "enable threads . Try linking with '-pthread'."
                                     << '\n';
@@ -63,7 +63,7 @@ void Uploader::printAvailableTargets() {
   }
 }
 
-void Uploader::initializeTargets(const Settings& settings) {
+void Uploader::initializeTargets() {
   std::vector<std::shared_ptr<Target>> loadedTargets = loadTargets();
 
   // Find all targets with a requested name, possibly multiple with the same name, but none twice
@@ -121,7 +121,7 @@ void Uploader::checkNextTarget(std::promise<std::shared_ptr<Target>>& promise) {
       [this, &promise, &nextTarget]() {
         try {
           promise.set_value(nextTarget);
-        } catch(std::exception e) {
+        } catch(const std::exception& e) {
           logger.log(Logger::Fatal) << "Failed to set promise value. If your are compiling this code yourself, you probably forgot to "
                                        "enable threads . Try '-pthread'."
                                     << '\n';

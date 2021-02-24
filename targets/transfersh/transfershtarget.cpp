@@ -4,10 +4,10 @@ setTargetType(TransferShTarget)
 
     TransferShTarget::TransferShTarget(bool useSSL, const std::string& url, const std::string& name)
     : HttplibTarget(useSSL, url, name) {
-  capabilities.maxSize = (long long)10 * 1024 * 1024 * 1024;
+  capabilities.maxSize = 10ll * 1024 * 1024 * 1024;
   capabilities.preserveName.reset(new bool(true));
-  capabilities.minRetention = (long long)1 * 24 * 60 * 1000;
-  capabilities.maxRetention = (long long)14 * 24 * 60 * 1000;
+  capabilities.minRetention = 1ll * 24 * 60 * 1000;
+  capabilities.maxRetention = 14ll * 24 * 60 * 1000;
   capabilities.maxDownloads.reset(new long(LONG_MAX));
 }
 
@@ -30,7 +30,7 @@ void TransferShTarget::uploadFile(BackendRequirements requirements,
     std::vector<std::string> urls = findValidUrls(response);
     if(urls.size() >= 1) {
       std::string resultUrl = urls.front();
-      int afterHost = resultUrl.find(url) + url.size() + 1;
+      size_t afterHost = resultUrl.find(url) + url.size() + 1;
       try {
         resultUrl.insert(afterHost, "get/");
         successCallback(resultUrl);

@@ -5,8 +5,8 @@ setTargetType(OshiTarget)
     OshiTarget::OshiTarget(bool useSSL, const std::string& url, const std::string& name)
     : HttplibTarget(useSSL, url, name) {
   capabilities.maxSize = 512 * 1024 * 1024;
-  capabilities.minRetention = (long long)1 * 60 * 1000;
-  capabilities.maxRetention = (long long)90 * 24 * 60 * 1000;
+  capabilities.minRetention = 1ll * 60 * 1000;
+  capabilities.maxRetention = 90ll * 24 * 60 * 1000;
   capabilities.maxDownloads.reset(new long(1));
 }
 

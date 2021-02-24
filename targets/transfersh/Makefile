@@ -8,10 +8,8 @@ MKDIR = mkdir -p
 
 TARGET := transfersh
 
-INCLUDE_DIRS += $(BASE_DIR)/include
-INCLUDE_DIRS += $(LIB_DIR)/cpp-httplib
-INCLUDE_DIRS += $(SRC_DIR)
-INCLUDE_FLAGS := $(addprefix -I,$(INCLUDE_DIRS))
+INCLUDE_FLAGS += -I$(BASE_DIR)/include
+INCLUDE_FLAGS += -isystem $(LIB_DIR)/cpp-httplib
 CXX_FLAGS := $(COMMON_CXX_FLAGS) $(INCLUDE_FLAGS) -MMD -MP -std=c++2a -pthread -fPIC -fno-use-cxa-atexit -DCPPHTTPLIB_OPENSSL_SUPPORT
 LD_FLAGS := $(COMMON_LD_FLAGS) -std=c++2a -pthread
 

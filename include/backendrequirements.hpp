@@ -7,7 +7,7 @@
 struct BackendRequirements {
   std::shared_ptr<bool> http;
   std::shared_ptr<bool> https;
-  std::shared_ptr<long long> minSize;
+  std::shared_ptr<size_t> minSize;
   std::shared_ptr<bool> preserveName;
   std::shared_ptr<long long> maxRetention;
   std::shared_ptr<long long> minRetention;
@@ -21,7 +21,7 @@ struct BackendCapabilities {
   // Https support
   bool https;
   // The maximum filesize
-  long long maxSize;
+  size_t maxSize;
   // True if a backend is capable of preserving filenames, False if incapable, nullptr if both
   std::shared_ptr<bool> preserveName;
   // The minimum amount a file will be stored for, before autodeleting
