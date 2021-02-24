@@ -11,7 +11,7 @@ TARGET := transfersh
 INCLUDE_FLAGS += -I$(BASE_DIR)/include
 INCLUDE_FLAGS += -isystem $(LIB_DIR)/cpp-httplib
 CXX_FLAGS := $(COMMON_CXX_FLAGS) $(INCLUDE_FLAGS) -MMD -MP -std=c++2a -pthread -fPIC -fno-use-cxa-atexit -DCPPHTTPLIB_OPENSSL_SUPPORT
-LD_FLAGS := $(COMMON_LD_FLAGS) -std=c++2a -pthread
+LD_FLAGS := -pthread -lcrypto -lssl
 
 TARGET_STATIC := lib$(TARGET).a
 TARGET_DYNAMIC := lib$(TARGET).so
@@ -27,7 +27,7 @@ $(BUILD_DIR)/$(TARGET_STATIC): $(OBJS)
 
 $(BUILD_DIR)/$(TARGET_DYNAMIC): $(OBJS)
 	$(MKDIR) $(dir $@)
-	g++ --shared $< -o $@
+	g++ --shared $(COMMON_LD_FLAGS) $< $(LD_FLAGS) -o $@
 
 $(OBJS): $(BUILD_DIR)/%.cpp.o: %.cpp
 	$(MKDIR) $(dir $@)

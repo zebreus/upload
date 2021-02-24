@@ -27,7 +27,7 @@ $(BUILD_DIR)/$(TARGET_STATIC): $(OBJS)
 
 $(BUILD_DIR)/$(TARGET_DYNAMIC): $(OBJS)
 	$(MKDIR) $(dir $@)
-	g++ --shared $< -o $@
+	g++ --shared $(LD_FLAGS) $< -o $@
 
 $(OBJS): $(BUILD_DIR)/%.cpp.o: %.cpp
 	$(MKDIR) $(dir $@)

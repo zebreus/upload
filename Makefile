@@ -17,7 +17,7 @@ MKDIR=mkdir -p
 MAKEOVERRIDES += CXX:=$(CXX)
 
 export COMMON_CXX_FLAGS :=  -std=c++2a -O3 $(GCC_WARNING_FLAGS)
-export COMMON_LD_FLAGS :=  -std=c++2a -O3 $(GCC_WARNING_FLAGS)
+export COMMON_LD_FLAGS := -Wl,-as-needed -Wl,-z,relro,-z,now -O3
 
 TARGETS_DIR = targets
 TARGETS_BUILD_DIR = ../../$(BUILD_DIR)
@@ -36,7 +36,7 @@ INCLUDE_FLAGS += -isystem $(LIB_DIR)/miniz-cpp
 INCLUDE_FLAGS += -isystem $(LIB_DIR)/cpp-httplib
 INCLUDE_FLAGS += -I$(SRC_DIR)
 CXX_FLAGS := $(COMMON_CXX_FLAGS) $(INCLUDE_FLAGS) -MMD -MP -pthread -DUPLOAD_PLUGIN_DIR=$(INSTALL_PLUGIN_DIR)
-LD_FLAGS := $(COMMON_LD_FLAGS) -pthread -lcrypto -lssl 
+LD_FLAGS := $(COMMON_LD_FLAGS) -pthread
 SRCS := $(wildcard $(SRC_DIR)/*.cpp)
 OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
 
