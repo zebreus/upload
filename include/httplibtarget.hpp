@@ -99,28 +99,21 @@ inline bool HttplibTarget::checkFile(const File& file) const{
 
 inline void HttplibTarget::initializeClient(){
   if(client == nullptr){
+    std::string httpUrl;
     if(useSSL){
-      std::string httpsUrl = "https://";
-      httpsUrl.append(url);
-      client = new httplib::Client(httpsUrl.c_str());
-      const char* path = "libs/cpp-httplib/example/ca-bundle.crt";
-      auto setCerts = []<typename T>(T client, const char* certs) {
-        if constexpr(requires{
-          client->set_ca_cert_path(certs);
-        }){
-          client->set_ca_cert_path(certs);
-          logger.log(Logger::Topic::Debug) << "HTTPS is supported\n";
-        }else{
-          logger.log(Logger::Topic::Debug) << "HTTPS is not supported\n";
-          throw std::invalid_argument("https is disabled");
-        }
-      };
-      setCerts(client, path);
+#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+      logger.log(Logger::Topic::Debug) << "HTTPS is supported\n";
+      httpUrl.append("https://");
+#else
+      logger.log(Logger::Topic::Debug) << "HTTPS is not supported\n";
+      throw std::invalid_argument("https is disabled");
+#endif
     }else{
       std::string httpUrl = "http://";
-      httpUrl.append(url);
-      client = new httplib::Client(httpUrl.c_str());
     }
+    httpUrl.append(url);
+    
+    client = new httplib::Client(httpUrl.c_str());
     
     httplib::Headers headers = {
       { "Accept", "*/*" },
