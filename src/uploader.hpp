@@ -1,28 +1,29 @@
 #ifndef UPLOADER_HPP
 #define UPLOADER_HPP
 
-#include <vector>
+#include <future>
 #include <list>
-#include <string>
 #include <memory>
 #include <stdexcept>
-#include "settings.hpp"
+#include <string>
 #include <target.hpp>
-#include "quit.hpp"
-#include <future>
-#include "targetloader.hpp"
-#include "logger.hpp"
+#include <vector>
 
-class Uploader{
+#include "logger.hpp"
+#include "quit.hpp"
+#include "settings.hpp"
+#include "targetloader.hpp"
+
+class Uploader {
   std::list<std::shared_ptr<Target>> targets;
   std::vector<std::shared_ptr<Target>> checkedTargets;
   Settings settings;
 
-public:
+ public:
   Uploader(const Settings& settings);
   std::string uploadFile(const File& file);
 
-private:
+ private:
   std::string uploadFile(const File& file, std::shared_ptr<Target> target);
   void printAvailableTargets();
   void initializeTargets(const Settings& settings);

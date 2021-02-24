@@ -1,50 +1,51 @@
 #include "settings.hpp"
+
 #include "logger.hpp"
 
-Settings::Settings(int argc, char** argv){
-  parseOptions(argc,argv);
+Settings::Settings(int argc, char** argv) {
+  parseOptions(argc, argv);
 }
 
-Settings::Mode Settings::getMode() const{
+Settings::Mode Settings::getMode() const {
   return mode;
 }
 
-Settings::ArchiveType Settings::getArchiveType() const{
+Settings::ArchiveType Settings::getArchiveType() const {
   return archiveType;
 }
 
-Settings::HttpsSetting Settings::getHttpsSetting() const{
+Settings::HttpsSetting Settings::getHttpsSetting() const {
   return httpsSetting;
 }
 
-bool Settings::getPreserveName() const{
+bool Settings::getPreserveName() const {
   return preserveName;
 }
 
-std::string Settings::getArchiveName() const{
+std::string Settings::getArchiveName() const {
   return archiveName;
 }
 
-std::vector<std::string> Settings::getRequestedTargets() const{
+std::vector<std::string> Settings::getRequestedTargets() const {
   return requestedTargets;
 }
 
-std::vector<std::string> Settings::getFiles() const{
+std::vector<std::string> Settings::getFiles() const {
   return files;
 }
 
-bool Settings::getDirectoryArchive() const{
+bool Settings::getDirectoryArchive() const {
   return directoryArchive;
 }
 
-BackendRequirements Settings::getBackendRequirements() const{
+BackendRequirements Settings::getBackendRequirements() const {
   BackendRequirements requirements;
-  
-  if(preserveName){
+
+  if(preserveName) {
     requirements.preserveName.reset(new bool(true));
   }
-  
-  switch(httpsSetting){
+
+  switch(httpsSetting) {
     case HttpsSetting::Forbid:
       requirements.http.reset(new bool(true));
       requirements.https.reset(new bool(false));
@@ -56,12 +57,13 @@ BackendRequirements Settings::getBackendRequirements() const{
     default:
       break;
   }
-  
+
   return requirements;
 }
 
-cxxopts::Options Settings::generateParser(){
+cxxopts::Options Settings::generateParser() {
   cxxopts::Options options("upload", "Upload files to the internet");
+  // clang-format off
   options.add_options()
   ("h,help", "Displays this help screen")
   ("version", "Displays version information")
@@ -79,77 +81,78 @@ cxxopts::Options Settings::generateParser(){
   ("n,name", "The name of the created archive in archive mode.", cxxopts::value<std::string>())
   ("file", "The files that will be uploaded.", cxxopts::value<std::vector<std::string>>())
   ;
+  // clang-format on
   options.parse_positional({"file"});
   return options;
 }
 
-void Settings::parseOptions(int argc, char** argv){
-  try{
-  cxxopts::Options options = generateParser();
-  auto result = options.parse(argc,argv);
- 
-  if (result.count("help")){
-    logger.log(Logger::Print) << options.help() << std::endl;
-    quit::success();
-  }
+void Settings::parseOptions(int argc, char** argv) {
+  try {
+    cxxopts::Options options = generateParser();
+    auto result = options.parse(argc, argv);
 
-  initializeLogger(result);
-  mode = parseMode(result);
-  files = parseFiles(result, mode);
-  archiveType = parseArchiveType(result);
-  httpsSetting = parseHttpsSetting(result);
-  if(result.count("target")){
-    requestedTargets = result["target"].template as<std::vector<std::string>>();
-  }
-  archiveName = parseArchiveName(result, archiveType);
-  preserveName = result.count("preserve-name");
-  directoryArchive = parseDirectoryArchive(result, mode);
-  }catch(cxxopts::OptionException e){
+    if(result.count("help")) {
+      logger.log(Logger::Print) << options.help() << std::endl;
+      quit::success();
+    }
+
+    initializeLogger(result);
+    mode = parseMode(result);
+    files = parseFiles(result, mode);
+    archiveType = parseArchiveType(result);
+    httpsSetting = parseHttpsSetting(result);
+    if(result.count("target")) {
+      requestedTargets = result["target"].template as<std::vector<std::string>>();
+    }
+    archiveName = parseArchiveName(result, archiveType);
+    preserveName = result.count("preserve-name");
+    directoryArchive = parseDirectoryArchive(result, mode);
+  } catch(cxxopts::OptionException e) {
     logger.log(Logger::Fatal) << e.what() << '\n';
     quit::invalidCliUsage();
   }
 }
 
-std::string Settings::getArchiveExtension(Settings::ArchiveType archiveType){
-  switch(archiveType){
+std::string Settings::getArchiveExtension(Settings::ArchiveType archiveType) {
+  switch(archiveType) {
     case ArchiveType::Zip:
     default:
       return "zip";
   }
 }
 
-Settings::Mode Settings::parseMode(const auto& parseResult){
-  if (parseResult.count("archive") && parseResult.count("individual")){
+Settings::Mode Settings::parseMode(const auto& parseResult) {
+  if(parseResult.count("archive") && parseResult.count("individual")) {
     logger.log(Logger::Fatal) << "You cannot set archive mode and individual mode." << '\n';
     quit::invalidCliUsage();
   }
-  
+
   // Test for flags
-  if (parseResult.count("list")){
+  if(parseResult.count("list")) {
     return Mode::List;
   }
-  if (parseResult.count("archive")){
+  if(parseResult.count("archive")) {
     return Mode::Archive;
   }
-  if (parseResult.count("individual")){
+  if(parseResult.count("individual")) {
     return Mode::Individual;
   }
 
   // Default mode depends on the number of files
-  if (parseResult.count("file") <= 1){
+  if(parseResult.count("file") <= 1) {
     return Mode::Individual;
-  }else{
+  } else {
     return Mode::Archive;
   }
 }
 
-Settings::ArchiveType Settings::parseArchiveType(const auto& parseResult){
-  if(parseResult.count("archive-type")){
+Settings::ArchiveType Settings::parseArchiveType(const auto& parseResult) {
+  if(parseResult.count("archive-type")) {
     std::string archiveType = parseResult["archive-type"].template as<std::string>();
-    
-    if(archiveType == "zip"){
+
+    if(archiveType == "zip") {
       return ArchiveType::Zip;
-    }else{
+    } else {
       logger.log(Logger::Fatal) << "You specified an invalid archive-type. The only possible value is 'zip'" << '\n';
       quit::invalidCliUsage();
     }
@@ -157,90 +160,92 @@ Settings::ArchiveType Settings::parseArchiveType(const auto& parseResult){
   return defaultArchiveType;
 }
 
-Settings::HttpsSetting Settings::parseHttpsSetting(const auto& parseResult){
-  if(parseResult.count("ssl") && parseResult.count("no-ssl")){
+Settings::HttpsSetting Settings::parseHttpsSetting(const auto& parseResult) {
+  if(parseResult.count("ssl") && parseResult.count("no-ssl")) {
     logger.log(Logger::Fatal) << "You cannot have ssl and no-ssl, try leaving one away" << '\n';
     quit::invalidCliUsage();
   }
-  
-  if(parseResult.count("ssl")){
+
+  if(parseResult.count("ssl")) {
     return HttpsSetting::Force;
   }
-  
-  if(parseResult.count("no-ssl")){
+
+  if(parseResult.count("no-ssl")) {
     return HttpsSetting::Forbid;
   }
-  
+
   return HttpsSetting::Allow;
 }
 
-std::vector<std::string> Settings::parseFiles(const auto& parseResult, Settings::Mode mode){
-  bool filesRequired = ( mode == Mode::Archive || mode == Mode::Individual );
-  if(parseResult.count("file") == 0){
-    if(filesRequired){
+std::vector<std::string> Settings::parseFiles(const auto& parseResult, Settings::Mode mode) {
+  bool filesRequired = (mode == Mode::Archive || mode == Mode::Individual);
+  if(parseResult.count("file") == 0) {
+    if(filesRequired) {
       logger.log(Logger::Fatal) << "You have to specify files to upload. Use upload like 'upload file.txt file2.txt'" << '\n';
       quit::invalidCliUsage();
-    }else{
+    } else {
       return {};
     }
   }
   return parseResult["file"].template as<std::vector<std::string>>();
 }
 
-bool Settings::parseDirectoryArchive(const auto& parseResult, Settings::Mode mode){
-  bool settingRequired = ( mode == Mode::Archive || mode == Mode::Individual );
-  if(settingRequired){
-    if(parseResult.count("root-archive") && parseResult.count("directory-archive")){
-      logger.log(Logger::Fatal) << "You cannot have root-archive and directory-archive. Based on your mode the recommended and default setting is '"
-              << ( mode == Mode::Archive ? "--directory-archive" : "--root-archive" ) << "' ." << '\n';
+bool Settings::parseDirectoryArchive(const auto& parseResult, Settings::Mode mode) {
+  bool settingRequired = (mode == Mode::Archive || mode == Mode::Individual);
+  if(settingRequired) {
+    if(parseResult.count("root-archive") && parseResult.count("directory-archive")) {
+      logger.log(Logger::Fatal)
+          << "You cannot have root-archive and directory-archive. Based on your mode the recommended and default setting is '"
+          << (mode == Mode::Archive ? "--directory-archive" : "--root-archive") << "' ." << '\n';
       quit::invalidCliUsage();
     }
-    
-    if(parseResult.count("root-archive")){
+
+    if(parseResult.count("root-archive")) {
       return false;
     }
-    
-    if(parseResult.count("directory-archive")){
+
+    if(parseResult.count("directory-archive")) {
       return true;
     }
-    
-    if( mode == Mode::Archive ){
+
+    if(mode == Mode::Archive) {
       return true;
-    }else{
+    } else {
       return false;
     }
-  }else{
+  } else {
     return false;
   }
 }
 
-std::string Settings::parseArchiveName(const auto& parseResult, Settings::ArchiveType archiveType){
-  if(parseResult.count("name")){
+std::string Settings::parseArchiveName(const auto& parseResult, Settings::ArchiveType archiveType) {
+  if(parseResult.count("name")) {
     std::string name = parseResult["name"].template as<std::string>();
-    //TODO better check for valid names
-    if(name == ""){
-      logger.log(Logger::Fatal) << "You set an invalid archive name " << name << " . At the moment I cannot make any recommendations for improvement." << '\n';
+    // TODO better check for valid names
+    if(name == "") {
+      logger.log(Logger::Fatal) << "You set an invalid archive name " << name
+                                << " . At the moment I cannot make any recommendations for improvement." << '\n';
       quit::invalidCliUsage();
     }
     return name;
   }
-  
+
   std::string name;
-  
+
   int nameLength = 8;
-  name.reserve(nameLength+1);
+  name.reserve(nameLength + 1);
   srand(time(NULL));
-  for(int x = 0; x < nameLength; x++){
-    name.push_back(65 + (rand()%2)*32 + (rand()%26) ); 
+  for(int x = 0; x < nameLength; x++) {
+    name.push_back(65 + (rand() % 2) * 32 + (rand() % 26));
   }
-  
+
   name.push_back('.');
   name.append(getArchiveExtension(archiveType));
   return name;
 }
 
-void Settings::initializeLogger(const auto& parseResult) const{
-  switch(parseResult.count("v")){
+void Settings::initializeLogger(const auto& parseResult) const {
+  switch(parseResult.count("v")) {
     case 0:
       logger.setTopicState(Logger::Topic::Fatal, true);
       logger.setTopicState(Logger::Topic::Print, true);

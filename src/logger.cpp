@@ -2,35 +2,35 @@
 
 Logger logger;
 
-Logger::Logger(){
+Logger::Logger() {
   topicState[Topic::Fatal] = true;
   topicState[Topic::Print] = true;
   topicState[Topic::Url] = true;
   topicState[Topic::Debug] = false;
 }
 
-bool Logger::getTopicState(Topic topic){
+bool Logger::getTopicState(Topic topic) {
   return topicState[topic];
 }
 
-void Logger::setTopicState(Topic topic, bool state){
+void Logger::setTopicState(Topic topic, bool state) {
   topicState[topic] = state;
 }
 
-void Logger::log(Topic topic, const std::string& message){
+void Logger::log(Topic topic, const std::string& message) {
   log(topic) << message;
 }
 
-std::ostream& Logger::log(Topic topic){
+std::ostream& Logger::log(Topic topic) {
   static std::ofstream nullstream;
   static bool markedBad = false;
-  if (!markedBad) {
+  if(!markedBad) {
     nullstream.setstate(std::ios_base::badbit);
     markedBad = true;
   }
-  
-  if(getTopicState(topic)){
-    switch(topic){
+
+  if(getTopicState(topic)) {
+    switch(topic) {
       case Topic::Print:
         return std::cout;
       case Topic::Fatal:
@@ -44,11 +44,11 @@ std::ostream& Logger::log(Topic topic){
       default:
         return nullstream;
     }
-  }else{
+  } else {
     return nullstream;
   }
 }
 
-std::ostream& Logger::debug(){
+std::ostream& Logger::debug() {
   return log(Topic::Debug);
 }

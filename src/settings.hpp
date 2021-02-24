@@ -5,27 +5,18 @@
 #include <iostream>
 #include <string>
 #include <vector>
+
+#include "backendrequirements.hpp"
 #include "quit.hpp"
 #include "target.hpp"
-#include "backendrequirements.hpp"
 
-class Settings{
-public:
-  enum Mode{
-    Individual,
-    Archive,
-    List
-  };
-  enum ArchiveType{
-    Zip
-  };
-  enum HttpsSetting{
-    Forbid,
-    Allow,
-    Force
-  };
-  
-private:
+class Settings {
+ public:
+  enum Mode { Individual, Archive, List };
+  enum ArchiveType { Zip };
+  enum HttpsSetting { Forbid, Allow, Force };
+
+ private:
   Mode mode;
   ArchiveType archiveType;
   HttpsSetting httpsSetting;
@@ -34,12 +25,12 @@ private:
   std::vector<std::string> requestedTargets;
   std::vector<std::string> files;
   bool directoryArchive;
-  
+
   static constexpr ArchiveType defaultArchiveType = ArchiveType::Zip;
   static constexpr HttpsSetting defaultHttpsSetting = HttpsSetting::Allow;
   static constexpr bool defaultPreserveName = false;
 
-public:
+ public:
   Settings(int argc, char** argv);
   Mode getMode() const;
   ArchiveType getArchiveType() const;
@@ -51,7 +42,7 @@ public:
   bool getDirectoryArchive() const;
   BackendRequirements getBackendRequirements() const;
 
-private:
+ private:
   cxxopts::Options generateParser();
   void parseOptions(int argc, char** argv);
   std::string getArchiveExtension(const Settings::ArchiveType archiveType);

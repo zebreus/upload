@@ -4,20 +4,20 @@
 #include <iostream>
 #include <string>
 
-namespace quit{
+namespace quit {
 
-[[ noreturn ]] void success();
+[[noreturn]] void success();
 
-[[ noreturn ]] void failedToUpload();
+[[noreturn]] void failedToUpload();
 
-[[ noreturn ]] void noTargetSelected();
+[[noreturn]] void noTargetSelected();
 
-[[ noreturn ]] void invalidCliUsage();
+[[noreturn]] void invalidCliUsage();
 
-[[ noreturn ]] void failedReadingFiles();
+[[noreturn]] void failedReadingFiles();
 
-[[ noreturn ]] void unexpectedFailure();
+[[noreturn]] void unexpectedFailure();
 
-}
+}  // namespace quit
 
 #endif

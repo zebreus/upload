@@ -1,14 +1,15 @@
 #ifndef FILE_HPP
 #define FILE_HPP
 
-#include <string>
-#include <fstream>
 #include <filesystem>
+#include <fstream>
+#include <string>
 
-class File{
+class File {
   std::string name;
   std::string content;
-public:
+
+ public:
   File(const std::filesystem::path& path);
   File(const std::string& name, const std::string& content);
   std::string getName() const;

@@ -1,12 +1,12 @@
 #ifndef LOADER_HPP
 #define LOADER_HPP
 
-#include <vector>
 #include <string>
-#include "file.hpp"
-#include "settings.hpp"
-#include "logger.hpp"
+#include <vector>
 
+#include "file.hpp"
+#include "logger.hpp"
+#include "settings.hpp"
 
 #ifdef __unix__
 #include <unistd.h>
@@ -14,7 +14,7 @@
 
 std::vector<File> loadFiles(const Settings& settings);
 
-//Converts a string to a path and ensures, that it is readable and a regular file or a directory
+// Converts a string to a path and ensures, that it is readable and a regular file or a directory
 std::filesystem::path loadPath(const std::string& filePath);
 
 bool isDirectory(const std::filesystem::path& path);
