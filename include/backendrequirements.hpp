@@ -28,7 +28,8 @@ struct BackendCapabilities{
   long long minRetention;
   //The maximum time a file can be stored for
   long long maxRetention;
-  //If set, the file will be deleted after this many downloads
+  //If set, the file can be deleted after a maximum of this many downloads
+  //It is assumed, that there is always an option to not delete files
   std::shared_ptr<long> maxDownloads;
   
 

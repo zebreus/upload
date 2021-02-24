@@ -5,8 +5,8 @@ setTargetType(NullPointerTarget)
 NullPointerTarget::NullPointerTarget(bool useSSL, const std::string& url, const std::string& name): HttplibTarget(useSSL,url,name){
   capabilities.maxSize = 512*1024*1024;
   capabilities.preserveName.reset(new bool(false));
-  capabilities.minRetention = (long long)30*24*60*60*1000;
-  capabilities.maxRetention = (long long)365*24*60*60*1000;
+  capabilities.minRetention = (long long)30*24*60*1000;
+  capabilities.maxRetention = (long long)365*24*60*1000;
 }
 
 bool NullPointerTarget::staticFileCheck(BackendRequirements requirements, const File& file) const{

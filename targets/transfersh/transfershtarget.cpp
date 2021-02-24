@@ -5,8 +5,8 @@ setTargetType(TransferShTarget)
 TransferShTarget::TransferShTarget(bool useSSL, const std::string& url, const std::string& name): HttplibTarget(useSSL,url,name){
   capabilities.maxSize = (long long)10*1024*1024*1024;
   capabilities.preserveName.reset(new bool(true));
-  capabilities.minRetention = (long long)1*24*60*60*1000;
-  capabilities.maxRetention = (long long)14*24*60*60*1000;
+  capabilities.minRetention = (long long)1*24*60*1000;
+  capabilities.maxRetention = (long long)14*24*60*1000;
   capabilities.maxDownloads.reset(new long(LONG_MAX));
 }
 
@@ -14,7 +14,7 @@ void TransferShTarget::uploadFile(BackendRequirements requirements, const File& 
   
   httplib::Headers headers;
   long long retentionPeriod = determineRetention(requirements);
-  int retentionDays = retentionPeriod / (24ll*60*60*1000);
+  int retentionDays = retentionPeriod / (24ll*60*1000);
   headers.insert({"Max-Days", std::to_string(retentionDays)});
   
   if(requirements.maxDownloads != nullptr){
