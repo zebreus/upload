@@ -17,6 +17,8 @@ public:
 
 protected:
   static constexpr auto userAgent = "upload/0.0";
+  //TODO improve expression
+  static constexpr auto urlRegexString = "http[-\\]_.~!*'();:@&=+$,/?%#[A-z0-9]+";
   std::string name;
   std::string url;
   bool useSSL;
@@ -28,7 +30,7 @@ protected:
   void initializeClient();
   std::string getErrorMessage(httplib::Error error);
   bool checkMimetype(const File& file, const std::vector<std::string>& blacklist) const;
-  std::string postForm(const httplib::MultipartFormDataItems& form);
+  std::string postForm(const httplib::MultipartFormDataItems& form, const httplib::Headers& headers = {});
   std::string putFile(const File& file, const httplib::Headers& headers = {});
   std::vector<std::string> findValidUrls(const std::string& input);
   long long determineRetention(BackendRequirements requirements);
@@ -160,8 +162,8 @@ inline bool HttplibTarget::checkMimetype(const File& file, const std::vector<std
   return true;
 }
 
-inline std::string HttplibTarget::postForm(const httplib::MultipartFormDataItems& form){
-  if(auto result = client->Post("/", form)){
+inline std::string HttplibTarget::postForm(const httplib::MultipartFormDataItems& form, const httplib::Headers& headers){
+  if(auto result = client->Post("/", headers, form)){
     logger.log(Logger::Topic::Debug) << "Received response from " << name << " (" << result->status << "): " << result->body << '\n';
     if(result->status != 200){
       std::stringstream message;
@@ -198,14 +200,16 @@ inline std::string HttplibTarget::putFile(const File& file, const httplib::Heade
 
 
 inline std::vector<std::string> HttplibTarget::findValidUrls(const std::string& input){
-    //TODO improve expression
-    std::regex urlExpression("http[-\\]_.~!*'();:@&=+$,/?%#[A-z0-9]+", std::regex::icase | std::regex::ECMAScript);
-    std::smatch results;
-    std::regex_search(input,results,urlExpression);
+    std::regex urlExpression(urlRegexString , std::regex::icase | std::regex::ECMAScript);
+    auto urlsBegin = std::sregex_iterator(input.begin(),input.end(), urlExpression);
+    auto urlsEnd = std::sregex_iterator();
+
     std::vector<std::string> resultsVector;
-    for(const std::string& result: results){
-      resultsVector.push_back(result);
-    }
+    for (std::sregex_iterator i = urlsBegin; i != urlsEnd; ++i) {
+        std::smatch match = *i;
+        resultsVector.push_back(match.str());
+    }   
+    
     return resultsVector;
 }
 
