@@ -3,8 +3,8 @@ BUILD_DIR := $(BASE_DIR)/build
 LIB_DIR := $(BASE_DIR)/libs
 SRC_DIR := .
 
-CXX := g++
-MKDIR := mkdir -p
+CXX = g++
+MKDIR = mkdir -p
 
 TARGET := transfersh
 
@@ -12,8 +12,8 @@ INCLUDE_DIRS += $(BASE_DIR)/include
 INCLUDE_DIRS += $(LIB_DIR)/cpp-httplib
 INCLUDE_DIRS += $(SRC_DIR)
 INCLUDE_FLAGS := $(addprefix -I,$(INCLUDE_DIRS))
-CXX_FLAGS := $(INCLUDE_FLAGS) -MMD -MP -std=c++2a -O3 -pthread -fPIC -fno-use-cxa-atexit -DCPPHTTPLIB_OPENSSL_SUPPORT
-LD_FLAGS := -std=c++2a -O3 -pthread
+CXX_FLAGS := $(COMMON_CXX_FLAGS) $(INCLUDE_FLAGS) -MMD -MP -std=c++2a -pthread -fPIC -fno-use-cxa-atexit -DCPPHTTPLIB_OPENSSL_SUPPORT
+LD_FLAGS := $(COMMON_LD_FLAGS) -std=c++2a -pthread
 
 TARGET_STATIC := lib$(TARGET).a
 TARGET_DYNAMIC := lib$(TARGET).so

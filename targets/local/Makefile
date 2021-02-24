@@ -11,9 +11,8 @@ TARGET := local
 INCLUDE_DIRS += $(BASE_DIR)/include
 INCLUDE_DIRS += $(SRC_DIR)
 INCLUDE_FLAGS := $(addprefix -I,$(INCLUDE_DIRS))
-CXX_FLAGS := $(INCLUDE_FLAGS) -MMD -MP -std=c++2a -O3 -pthread -fPIC -fno-use-cxa-atexit
-LD_FLAGS := -std=c++2a -O3 -pthread
-
+CXX_FLAGS := $(COMMON_CXX_FLAGS) $(INCLUDE_FLAGS) -MMD -MP -fPIC -fno-use-cxa-atexit
+LD_FLAGS := $(COMMON_LD_FLAGS) -pthread
 TARGET_STATIC := lib$(TARGET).a
 TARGET_DYNAMIC := lib$(TARGET).so
 SRCS := $(wildcard $(SRC_DIR)/*.cpp)

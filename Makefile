@@ -5,8 +5,15 @@ SRC_DIR := src
 # Upload will load plugins from here
 INSTALL_PLUGIN_DIR := $(abspath $(BUILD_DIR))
 
-CXX := g++
+WARNING_FLAGS := -pedantic -Wall -Wextra -Wcast-align -Wcast-qual -Wctor-dtor-privacy -Wdisabled-optimization -Wformat=2 -Winit-self -Wlogical-op -Wmissing-declarations -Wmissing-include-dirs -Wnoexcept -Wold-style-cast -Woverloaded-virtual -Wredundant-decls -Wshadow -Wsign-conversion -Wsign-promo -Wstrict-null-sentinel -Wstrict-overflow=5 -Wswitch-default -Wundef -Werror -Wno-unused
+
+CXX=g++
 MKDIR := mkdir -p
+MAKEOVERRIDES += CXX:=$(CXX)
+MAKEOVERRIDES += MKDIR:=$(MKDIR)
+
+export COMMON_CXX_FLAGS :=  -std=c++2a -O3 $(WARNING_FLAGS)
+export COMMON_LD_FLAGS :=  -std=c++2a -O3 $(WARNING_FLAGS)
 
 TARGETS_DIR = targets
 TARGETS_BUILD_DIR = ../../$(BUILD_DIR)
@@ -24,8 +31,8 @@ INCLUDE_DIRS += $(LIB_DIR)/cxxopts/include
 INCLUDE_DIRS += $(LIB_DIR)/miniz-cpp
 INCLUDE_DIRS += $(SRC_DIR)
 INCLUDE_FLAGS := $(INCLUDE_DIRS:%=-I%)
-CXX_FLAGS := $(INCLUDE_FLAGS) -MMD -MP -std=c++2a -O3 -pthread -DUPLOAD_PLUGIN_DIR=$(INSTALL_PLUGIN_DIR)
-LD_FLAGS := -std=c++2a -O3 -pthread -lcrypto -lssl 
+CXX_FLAGS := $(COMMON_CXX_FLAGS) $(INCLUDE_FLAGS) -MMD -MP -pthread -DUPLOAD_PLUGIN_DIR=$(INSTALL_PLUGIN_DIR)
+LD_FLAGS := $(COMMON_LD_FLAGS) -pthread -lcrypto -lssl 
 SRCS := $(wildcard $(SRC_DIR)/*.cpp)
 OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
 
