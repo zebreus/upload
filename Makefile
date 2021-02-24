@@ -70,3 +70,11 @@ $(SHARED_TARGET_LIBS): $(BUILD_DIR)/lib%.so :
 
 clean:
 	$(RM) -r $(BUILD_DIR)
+
+## Section for formatting
+
+ALL_SOURCE_FOLDERS := $(SRC_DIR) include $(wildcard $(TARGETS_DIR)/*)
+ALL_CXX_FILES := $(wildcard $(ALL_SOURCE_FOLDERS:%=%/*.cpp)) $(wildcard $(ALL_SOURCE_FOLDERS:%=%/*.hpp))
+
+format: 
+	clang-format -style=file -i $(ALL_CXX_FILES)
