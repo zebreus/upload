@@ -2,6 +2,9 @@ BUILD_DIR := build
 LIB_DIR := libs
 SRC_DIR := src
 
+# Upload will load plugins from here
+INSTALL_PLUGIN_DIR := $(abspath $(BUILD_DIR))
+
 CXX := g++
 MKDIR := mkdir -p
 
@@ -21,7 +24,7 @@ INCLUDE_DIRS += $(LIB_DIR)/cxxopts/include
 INCLUDE_DIRS += $(LIB_DIR)/miniz-cpp
 INCLUDE_DIRS += $(SRC_DIR)
 INCLUDE_FLAGS := $(INCLUDE_DIRS:%=-I%)
-CXX_FLAGS := $(INCLUDE_FLAGS) -MMD -MP -std=c++2a -O3 -pthread
+CXX_FLAGS := $(INCLUDE_FLAGS) -MMD -MP -std=c++2a -O3 -pthread -DUPLOAD_PLUGIN_DIR=$(INSTALL_PLUGIN_DIR)
 LD_FLAGS := -std=c++2a -O3 -pthread -lcrypto -lssl 
 SRCS := $(wildcard $(SRC_DIR)/*.cpp)
 OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)

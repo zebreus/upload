@@ -39,13 +39,22 @@ std::vector<std::shared_ptr<Target>> loadTargetsFromFile(const std::filesystem::
 }
 
 std::vector<std::filesystem::path> findLibraries(){
+  std::string pluginDirectory;
+#ifndef UPLOAD_PLUGIN_DIR
+#warning "No plugin directory specified. You should define UPLOAD_PLUGIN_DIR as the directory where you want to load plugins from"
+  logger.log(Logger::Debug) << "No plugin directory specified. You should define UPLOAD_PLUGIN_DIR as the directory where you want to load plugins from, when building upload" << '\n';
+  return {};
+#else
+  #define STRINGIFY(x) #x
+  #define TOSTRING(x) STRINGIFY(x)
   std::vector<std::filesystem::path> targetLibraries;
-  for(auto& directoryEntry: std::filesystem::directory_iterator("./build")){
+  for(auto& directoryEntry: std::filesystem::directory_iterator(TOSTRING(UPLOAD_PLUGIN_DIR))){
     if(directoryEntry.path().extension() == ".so"){
       targetLibraries.push_back(directoryEntry.path());
     }
   }
   return targetLibraries;
+#endif
 }
 
 std::vector<std::shared_ptr<Target>> loadTargets(){
