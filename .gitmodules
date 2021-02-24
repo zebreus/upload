@@ -4,7 +4,7 @@
 	branch = tag/v2.2.1
 [submodule "libs/miniz-cpp"]
 	path = libs/miniz-cpp
-	url = https://github.com/tfussell/miniz-cpp.git
+	url = https://github.com/Zebreus/miniz-cpp.git
 [submodule "libs/cpp-httplib"]
 	path = libs/cpp-httplib
 	url = https://github.com/yhirose/cpp-httplib.git
