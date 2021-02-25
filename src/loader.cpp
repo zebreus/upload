@@ -152,7 +152,9 @@ void Loader::startStreamThread(const std::filesystem::path& path) {
       logger.log(Logger::Debug) << "After  Good: " << stream->good() << "Bad: " << stream->bad() << "fail: " << stream->fail()
                                 << "eof: " << stream->eof() << '\n';
       if(!stream->fail()) {
-        loadPath(std::string(buffer));
+        if(buffer[0] != 0) {
+          loadPath(std::string(buffer));
+        }
       } else if(!stream->eof()) {
         logger.log(Logger::Fatal) << "Failed to read file from stream" << '\n';
         quit::failedReadingFiles();
