@@ -1,22 +1,22 @@
 #ifndef UPLOADER_HPP
 #define UPLOADER_HPP
 
+#include <backend.hpp>
 #include <future>
 #include <list>
 #include <memory>
 #include <stdexcept>
 #include <string>
-#include <target.hpp>
 #include <vector>
 
+#include "backendloader.hpp"
 #include "logger.hpp"
 #include "quit.hpp"
 #include "settings.hpp"
-#include "targetloader.hpp"
 
 class Uploader {
-  std::list<std::shared_ptr<Target>> targets;
-  std::vector<std::shared_ptr<Target>> checkedTargets;
+  std::list<std::shared_ptr<Backend>> backends;
+  std::vector<std::shared_ptr<Backend>> checkedBackends;
   Settings settings;
 
  public:
@@ -24,11 +24,11 @@ class Uploader {
   std::string uploadFile(const File& file);
 
  private:
-  std::string uploadFile(const File& file, std::shared_ptr<Target> target);
-  void printAvailableTargets();
-  void initializeTargets();
-  void checkNextTarget();
-  void checkNextTarget(std::promise<std::shared_ptr<Target>>& promise);
+  std::string uploadFile(const File& file, std::shared_ptr<Backend> backend);
+  void printAvailableBackends();
+  void initializeBackends();
+  void checkNextBackend();
+  void checkNextBackend(std::promise<std::shared_ptr<Backend>>& promise);
 };
 
 #endif

@@ -1,23 +1,23 @@
-#ifndef LOCAL_TARGET_HPP
-#define LOCAL_TARGET_HPP
+#ifndef LOCAL_BACKEND_HPP
+#define LOCAL_BACKEND_HPP
 
 #include <filesystem>
 #include <fstream>
 #include <string>
 
-#include "target.hpp"
+#include "backend.hpp"
 
 #ifdef __unix__
 #include <unistd.h>
 #endif
 
-class LocalTarget: public Target {
+class LocalBackend: public Backend {
   static constexpr BackendFeatures supportedFeatures = BackendFeatures::Http | BackendFeatures::PreserveName;
-  static constexpr auto name = "localtarget";
+  static constexpr auto name = "localbackend";
   std::filesystem::path basePath;
 
  public:
-  LocalTarget(std::filesystem::path basePath);
+  LocalBackend(std::filesystem::path basePath);
   std::string getName() const override;
   bool staticSettingsCheck(BackendRequirements requiredFeatures) const override;
   bool staticFileCheck(BackendRequirements requiredFeatures, const File& file) const override;
@@ -29,7 +29,7 @@ class LocalTarget: public Target {
                   const File& file,
                   std::function<void(std::string)> successCallback,
                   std::function<void(std::string)> errorCallback) override;
-  static std::vector<Target*> loadTargets();
+  static std::vector<Backend*> loadBackends();
 
  private:
   bool fileCanBeCreated(std::filesystem::path path);

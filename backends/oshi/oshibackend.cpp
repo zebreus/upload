@@ -1,19 +1,19 @@
-#include "oshitarget.hpp"
+#include "oshibackend.hpp"
 
-setTargetType(OshiTarget)
+setBackendType(OshiBackend)
 
-    OshiTarget::OshiTarget(bool useSSL, const std::string& url, const std::string& name)
-    : HttplibTarget(useSSL, url, name) {
+    OshiBackend::OshiBackend(bool useSSL, const std::string& url, const std::string& name)
+    : HttplibBackend(useSSL, url, name) {
   capabilities.maxSize = 512 * 1024 * 1024;
   capabilities.minRetention = 1ll * 60 * 1000;
   capabilities.maxRetention = 90ll * 24 * 60 * 1000;
   capabilities.maxDownloads.reset(new long(1));
 }
 
-void OshiTarget::uploadFile(BackendRequirements requirements,
-                            const File& file,
-                            std::function<void(std::string)> successCallback,
-                            std::function<void(std::string)> errorCallback) {
+void OshiBackend::uploadFile(BackendRequirements requirements,
+                             const File& file,
+                             std::function<void(std::string)> successCallback,
+                             std::function<void(std::string)> errorCallback) {
   httplib::MultipartFormDataItems items = {{"f", file.getContent(), file.getName(), file.getMimetype()}};
 
   httplib::Headers headers = generateHeaders(requirements, file);
@@ -35,7 +35,7 @@ void OshiTarget::uploadFile(BackendRequirements requirements,
   }
 }
 
-httplib::Headers OshiTarget::generateHeaders(BackendRequirements requirements, const File& file) {
+httplib::Headers OshiBackend::generateHeaders(BackendRequirements requirements, const File& file) {
   httplib::Headers headers;
 
   long long retentionPeriod = determineRetention(requirements);
@@ -58,22 +58,22 @@ httplib::Headers OshiTarget::generateHeaders(BackendRequirements requirements, c
   return headers;
 }
 
-std::vector<Target*> OshiTarget::loadTargets() {
-  std::vector<Target*> targets;
+std::vector<Backend*> OshiBackend::loadBackends() {
+  std::vector<Backend*> backends;
 
   try {
-    Target* httpTarget = new OshiTarget(false, "oshi.at", "oshi (HTTP)");
-    targets.push_back(httpTarget);
+    Backend* httpBackend = new OshiBackend(false, "oshi.at", "oshi (HTTP)");
+    backends.push_back(httpBackend);
   } catch(std::invalid_argument& e) {
     logger.log(Logger::Info) << "Failed to load oshi (HTTP):" << e.what() << "\n";
   }
 
   try {
-    Target* httpsTarget = new OshiTarget(true, "oshi.at", "oshi");
-    targets.push_back(httpsTarget);
+    Backend* httpsBackend = new OshiBackend(true, "oshi.at", "oshi");
+    backends.push_back(httpsBackend);
   } catch(std::invalid_argument& e) {
     logger.log(Logger::Info) << "Failed to load oshi (https):" << e.what() << "\n";
   }
 
-  return targets;
+  return backends;
 }

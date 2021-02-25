@@ -1,40 +1,40 @@
 #include "uploader.hpp"
 
 Uploader::Uploader(const Settings& settings): settings(settings) {
-  initializeTargets();
+  initializeBackends();
   if(settings.getMode() == Settings::Mode::List) {
-    printAvailableTargets();
+    printAvailableBackends();
     quit::success();
   }
 }
 
 std::string Uploader::uploadFile(const File& file) {
-  for(const std::shared_ptr<Target>& target : checkedTargets) {
+  for(const std::shared_ptr<Backend>& backend : checkedBackends) {
     try {
-      return uploadFile(file, target);
+      return uploadFile(file, backend);
     } catch(const std::runtime_error& e) {
-      logger.log(Logger::Info) << "Failed to upload " << file.getName() << " to " << target->getName() << ". " << e.what() << '\n';
+      logger.log(Logger::Info) << "Failed to upload " << file.getName() << " to " << backend->getName() << ". " << e.what() << '\n';
     } catch(...) {
-      logger.log(Logger::Info) << "Unexpected error while uploading " << file.getName() << " to " << target->getName() << "." << '\n';
+      logger.log(Logger::Info) << "Unexpected error while uploading " << file.getName() << " to " << backend->getName() << "." << '\n';
     }
   }
 
   while(true) {
-    checkNextTarget();
-    std::shared_ptr<Target> target = checkedTargets.back();
+    checkNextBackend();
+    std::shared_ptr<Backend> backend = checkedBackends.back();
     try {
-      return uploadFile(file, target);
+      return uploadFile(file, backend);
     } catch(const std::runtime_error& e) {
-      logger.log(Logger::Info) << "Failed to upload " << file.getName() << " to " << target->getName() << ". " << e.what() << '\n';
+      logger.log(Logger::Info) << "Failed to upload " << file.getName() << " to " << backend->getName() << ". " << e.what() << '\n';
     } catch(...) {
-      logger.log(Logger::Info) << "Unexpected error while uploading " << file.getName() << " to " << target->getName() << "." << '\n';
+      logger.log(Logger::Info) << "Unexpected error while uploading " << file.getName() << " to " << backend->getName() << "." << '\n';
     }
   }
 }
 
-std::string Uploader::uploadFile(const File& file, std::shared_ptr<Target> target) {
+std::string Uploader::uploadFile(const File& file, std::shared_ptr<Backend> backend) {
   std::promise<std::string> urlPromise;
-  target->uploadFile(
+  backend->uploadFile(
       settings.getBackendRequirements(),
       file,
       [this, &urlPromise](std::string url) {
@@ -54,73 +54,73 @@ std::string Uploader::uploadFile(const File& file, std::shared_ptr<Target> targe
   return urlPromise.get_future().get();
 }
 
-void Uploader::printAvailableTargets() {
-  for(const std::shared_ptr<Target>& target : checkedTargets) {
-    logger.log(Logger::Print) << target->getName() << '\n';
+void Uploader::printAvailableBackends() {
+  for(const std::shared_ptr<Backend>& backend : checkedBackends) {
+    logger.log(Logger::Print) << backend->getName() << '\n';
   }
-  for(const std::shared_ptr<Target>& target : targets) {
-    logger.log(Logger::Print) << target->getName() << '\n';
+  for(const std::shared_ptr<Backend>& backend : backends) {
+    logger.log(Logger::Print) << backend->getName() << '\n';
   }
 }
 
-void Uploader::initializeTargets() {
-  std::vector<std::shared_ptr<Target>> loadedTargets = loadTargets();
+void Uploader::initializeBackends() {
+  std::vector<std::shared_ptr<Backend>> loadedBackends = loadBackends();
 
-  // Find all targets with a requested name, possibly multiple with the same name, but none twice
-  if(settings.getRequestedTargets().size() > 0) {
-    std::vector<std::shared_ptr<Target>> unmatchedTargets = loadedTargets;
-    std::vector<std::shared_ptr<Target>> orderedTargets;
-    std::vector<std::shared_ptr<Target>> nextTargets;
-    for(const std::string& targetName : settings.getRequestedTargets()) {
+  // Find all backends with a requested name, possibly multiple with the same name, but none twice
+  if(settings.getRequestedBackends().size() > 0) {
+    std::vector<std::shared_ptr<Backend>> unmatchedBackends = loadedBackends;
+    std::vector<std::shared_ptr<Backend>> orderedBackends;
+    std::vector<std::shared_ptr<Backend>> nextBackends;
+    for(const std::string& backendName : settings.getRequestedBackends()) {
       bool found = false;
-      for(const std::shared_ptr<Target>& target : unmatchedTargets) {
-        if(target->getName() == targetName) {
-          orderedTargets.push_back(target);
+      for(const std::shared_ptr<Backend>& backend : unmatchedBackends) {
+        if(backend->getName() == backendName) {
+          orderedBackends.push_back(backend);
           found = true;
         } else {
-          nextTargets.push_back(target);
+          nextBackends.push_back(backend);
         }
       }
       if(!found) {
-        logger.log(Logger::Topic::Fatal) << "Unable to find requested target '" << targetName << "'. Maybe check for a typo in its name.";
+        logger.log(Logger::Topic::Fatal) << "Unable to find requested backend '" << backendName << "'. Maybe check for a typo in its name.";
         quit::invalidCliUsage();
       }
-      unmatchedTargets = nextTargets;
+      unmatchedBackends = nextBackends;
     }
-    loadedTargets = orderedTargets;
+    loadedBackends = orderedBackends;
   }
 
-  for(std::shared_ptr<Target> target : loadedTargets) {
-    if(target->staticSettingsCheck(settings.getBackendRequirements())) {
-      logger.log(Logger::Debug) << target->getName() << " has all required features." << '\n';
-      targets.push_back(target);
+  for(std::shared_ptr<Backend> backend : loadedBackends) {
+    if(backend->staticSettingsCheck(settings.getBackendRequirements())) {
+      logger.log(Logger::Debug) << backend->getName() << " has all required features." << '\n';
+      backends.push_back(backend);
     } else {
-      logger.log(Logger::Debug) << target->getName() << " does not have all required features." << '\n';
+      logger.log(Logger::Debug) << backend->getName() << " does not have all required features." << '\n';
     }
   }
 }
 
-void Uploader::checkNextTarget() {
-  std::promise<std::shared_ptr<Target>> nextTargetPromise;
-  std::future<std::shared_ptr<Target>> future = nextTargetPromise.get_future();
+void Uploader::checkNextBackend() {
+  std::promise<std::shared_ptr<Backend>> nextBackendPromise;
+  std::future<std::shared_ptr<Backend>> future = nextBackendPromise.get_future();
   ;
-  checkNextTarget(nextTargetPromise);
-  std::shared_ptr<Target> nextTarget = future.get();
-  checkedTargets.push_back(nextTarget);
+  checkNextBackend(nextBackendPromise);
+  std::shared_ptr<Backend> nextBackend = future.get();
+  checkedBackends.push_back(nextBackend);
 }
 
-void Uploader::checkNextTarget(std::promise<std::shared_ptr<Target>>& promise) {
-  if(targets.size() == 0) {
-    logger.log(Logger::Fatal) << "There is no target matching your requirements" << '\n';
+void Uploader::checkNextBackend(std::promise<std::shared_ptr<Backend>>& promise) {
+  if(backends.size() == 0) {
+    logger.log(Logger::Fatal) << "There is no backend matching your requirements" << '\n';
     quit::failedToUpload();
   }
-  std::shared_ptr<Target> nextTarget = targets.front();
-  targets.pop_front();
-  nextTarget->dynamicSettingsCheck(
+  std::shared_ptr<Backend> nextBackend = backends.front();
+  backends.pop_front();
+  nextBackend->dynamicSettingsCheck(
       settings.getBackendRequirements(),
-      [this, &promise, &nextTarget]() {
+      [this, &promise, &nextBackend]() {
         try {
-          promise.set_value(nextTarget);
+          promise.set_value(nextBackend);
         } catch(const std::exception& e) {
           logger.log(Logger::Fatal) << "Failed to set promise value. If your are compiling this code yourself, you probably forgot to "
                                        "enable threads . Try '-pthread'."
@@ -129,7 +129,7 @@ void Uploader::checkNextTarget(std::promise<std::shared_ptr<Target>>& promise) {
         }
       },
       [this, &promise](std::string message) {
-        checkNextTarget(promise);
+        checkNextBackend(promise);
       },
       200);
 }

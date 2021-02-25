@@ -1,22 +1,22 @@
-#ifndef TRANSFER_SH_TARGET_HPP
-#define TRANSFER_SH_TARGET_HPP
+#ifndef TRANSFER_SH_BACKEND_HPP
+#define TRANSFER_SH_BACKEND_HPP
 
 #include <httplib.h>
 
-#include <httplibtarget.hpp>
+#include <httplibbackend.hpp>
 #include <logger.hpp>
 #include <regex>
 #include <string>
 #include <variant>
 
-class TransferShTarget: public HttplibTarget {
+class TransferShBackend: public HttplibBackend {
  public:
-  TransferShTarget(bool useSSL, const std::string& url = "transfer.sh", const std::string& name = "transfer.sh");
+  TransferShBackend(bool useSSL, const std::string& url = "transfer.sh", const std::string& name = "transfer.sh");
   void uploadFile(BackendRequirements requiredFeatures,
                   const File& file,
                   std::function<void(std::string)> successCallback,
                   std::function<void(std::string)> errorCallback) override;
-  static std::vector<Target*> loadTargets();
+  static std::vector<Backend*> loadBackends();
 };
 
 #endif

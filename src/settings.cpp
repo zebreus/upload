@@ -26,8 +26,8 @@ std::string Settings::getArchiveName() const {
   return archiveName;
 }
 
-std::vector<std::string> Settings::getRequestedTargets() const {
-  return requestedTargets;
+std::vector<std::string> Settings::getRequestedBackends() const {
+  return requestedBackends;
 }
 
 std::vector<std::string> Settings::getFiles() const {
@@ -71,11 +71,11 @@ cxxopts::Options Settings::generateParser() {
   ("v", "Increase verbosity")
   ("a,archive", "Pack all files and directories into an archive")
   ("i,individual", "Upload all files or directory individually")
-  ("l,list", "List all available upload targets for the current request, ordered by preference")
+  ("l,list", "List all available upload backends for the current request, ordered by preference")
   ("archive-type", "Sets the archive type", cxxopts::value<std::string>())
   ("d,directory-archive", "Put the contents of directories in a directory in the archive.")
   ("r,root-archive", "Put the contents of directories in the root of the archive.")
-  ("t,target", "Add a specific target. If this option is used, the default order is discarded.", cxxopts::value<std::vector<std::string>>())
+  ("t,backend", "Add a specific backend. If this option is used, the default order is discarded.", cxxopts::value<std::vector<std::string>>())
   ("p,preserve-name", "Ensure that the filenames are preserved.")
   ("s,ssl", "Ensure the use of https.")
   ("no-ssl", "Ensure the use of http.")
@@ -102,8 +102,8 @@ void Settings::parseOptions(int argc, char** argv) {
     files = parseFiles(result, mode);
     archiveType = parseArchiveType(result);
     httpsSetting = parseHttpsSetting(result);
-    if(result.count("target")) {
-      requestedTargets = result["target"].template as<std::vector<std::string>>();
+    if(result.count("backend")) {
+      requestedBackends = result["backend"].template as<std::vector<std::string>>();
     }
     archiveName = parseArchiveName(result, archiveType);
     preserveName = result.count("preserve-name");

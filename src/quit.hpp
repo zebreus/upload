@@ -10,7 +10,7 @@ namespace quit {
 
 [[noreturn]] void failedToUpload();
 
-[[noreturn]] void noTargetSelected();
+[[noreturn]] void noBackendSelected();
 
 [[noreturn]] void invalidCliUsage();
 

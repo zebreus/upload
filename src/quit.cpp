@@ -8,7 +8,7 @@
   exit(3);
 }
 
-[[noreturn]] void quit::noTargetSelected() {
+[[noreturn]] void quit::noBackendSelected() {
   exit(4);
 }
 

@@ -1,16 +1,16 @@
-#include "localtarget.hpp"
+#include "localbackend.hpp"
 
-LocalTarget::LocalTarget(std::filesystem::path basePath): basePath(basePath) {}
+LocalBackend::LocalBackend(std::filesystem::path basePath): basePath(basePath) {}
 
-std::string LocalTarget::getName() const {
+std::string LocalBackend::getName() const {
   return name + basePath.string();
 }
 
-BackendFeatures LocalTarget::getSupportedFeatures() const {
+BackendFeatures LocalBackend::getSupportedFeatures() const {
   return supportedFeatures;
 }
 
-bool LocalTarget::staticSettingsCheck(BackendRequirements requiredFeatures) const {
+bool LocalBackend::staticSettingsCheck(BackendRequirements requiredFeatures) const {
   if((requiredFeatures & supportedFeatures) != requiredFeatures) {
     // std::clog << "Not all requiredFeatures are supported" << requiredFeatures << " " << supportedFeatures << "\n";
     return false;
@@ -19,7 +19,7 @@ bool LocalTarget::staticSettingsCheck(BackendRequirements requiredFeatures) cons
   return true;
 }
 
-bool LocalTarget::staticFileCheck(BackendRequirements requiredFeatures, const File& file) const {
+bool LocalBackend::staticFileCheck(BackendRequirements requiredFeatures, const File& file) const {
   std::string filename = file.getName();
   if(std::filesystem::path(file.getName()).remove_filename() != "") {
     // std::clog << "Filename has to be only a filename\n";
@@ -28,10 +28,10 @@ bool LocalTarget::staticFileCheck(BackendRequirements requiredFeatures, const Fi
   return true;
 }
 
-void LocalTarget::dynamicSettingsCheck(BackendRequirements requiredFeatures,
-                                       std::function<void()> successCallback,
-                                       std::function<void(std::string)> errorCallback,
-                                       int timeoutMillis) {
+void LocalBackend::dynamicSettingsCheck(BackendRequirements requiredFeatures,
+                                        std::function<void()> successCallback,
+                                        std::function<void(std::string)> errorCallback,
+                                        int timeoutMillis) {
   if(validBasePath()) {
     successCallback();
   } else {
@@ -39,25 +39,25 @@ void LocalTarget::dynamicSettingsCheck(BackendRequirements requiredFeatures,
   }
 }
 
-void LocalTarget::uploadFile(BackendRequirements requiredFeatures,
-                             const File& file,
-                             std::function<void(std::string)> successCallback,
-                             std::function<void(std::string)> errorCallback) {
-  std::filesystem::path targetFile(basePath);
-  targetFile.append(file.getName());
-  if(!fileCanBeCreated(targetFile)) {
-    errorCallback("Target file cannot be created");
+void LocalBackend::uploadFile(BackendRequirements requiredFeatures,
+                              const File& file,
+                              std::function<void(std::string)> successCallback,
+                              std::function<void(std::string)> errorCallback) {
+  std::filesystem::path backendFile(basePath);
+  backendFile.append(file.getName());
+  if(!fileCanBeCreated(backendFile)) {
+    errorCallback("Backend file cannot be created");
     return;
   }
 
-  std::ofstream fileStream(targetFile, std::ios::binary | std::ios::out);
+  std::ofstream fileStream(backendFile, std::ios::binary | std::ios::out);
   fileStream << file.getContent();
   fileStream.close();
 
-  successCallback(targetFile.string());
+  successCallback(backendFile.string());
 }
 
-bool LocalTarget::fileCanBeCreated(std::filesystem::path filePath) {
+bool LocalBackend::fileCanBeCreated(std::filesystem::path filePath) {
   std::error_code error;
   std::filesystem::file_status fileStatus = std::filesystem::status(filePath, error);
   std::stringstream message;
@@ -82,7 +82,7 @@ bool LocalTarget::fileCanBeCreated(std::filesystem::path filePath) {
   }
 }
 
-bool LocalTarget::validBasePath() {
+bool LocalBackend::validBasePath() {
   std::error_code error;
   if(!std::filesystem::is_directory(basePath, error)) {
     return false;
@@ -97,9 +97,9 @@ bool LocalTarget::validBasePath() {
   return true;
 }
 
-std::vector<Target*> LocalTarget::loadTargets() {
-  Target* myTarget = new LocalTarget("./beta");
-  return std::vector<Target*>{myTarget};
+std::vector<Backend*> LocalBackend::loadBackends() {
+  Backend* myBackend = new LocalBackend("./beta");
+  return std::vector<Backend*>{myBackend};
 }
 
-setTargetType(LocalTarget)
+setBackendType(LocalBackend)

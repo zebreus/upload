@@ -6,9 +6,9 @@
 #include <string>
 #include <vector>
 
+#include "backend.hpp"
 #include "backendrequirements.hpp"
 #include "quit.hpp"
-#include "target.hpp"
 
 class Settings {
  public:
@@ -22,7 +22,7 @@ class Settings {
   HttpsSetting httpsSetting;
   bool preserveName;
   std::string archiveName;
-  std::vector<std::string> requestedTargets;
+  std::vector<std::string> requestedBackends;
   std::vector<std::string> files;
   bool directoryArchive;
 
@@ -37,7 +37,7 @@ class Settings {
   HttpsSetting getHttpsSetting() const;
   bool getPreserveName() const;
   std::string getArchiveName() const;
-  std::vector<std::string> getRequestedTargets() const;
+  std::vector<std::string> getRequestedBackends() const;
   std::vector<std::string> getFiles() const;
   bool getDirectoryArchive() const;
   BackendRequirements getBackendRequirements() const;

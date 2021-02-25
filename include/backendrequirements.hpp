@@ -3,7 +3,7 @@
 
 #include <memory>
 
-// This struct represents requirements a Bbckend must meet
+// This struct represents requirements a Backend must meet
 struct BackendRequirements {
   std::shared_ptr<bool> http;
   std::shared_ptr<bool> https;

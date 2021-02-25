@@ -1,9 +1,9 @@
-#include "transfershtarget.hpp"
+#include "transfershbackend.hpp"
 
-setTargetType(TransferShTarget)
+setBackendType(TransferShBackend)
 
-    TransferShTarget::TransferShTarget(bool useSSL, const std::string& url, const std::string& name)
-    : HttplibTarget(useSSL, url, name) {
+    TransferShBackend::TransferShBackend(bool useSSL, const std::string& url, const std::string& name)
+    : HttplibBackend(useSSL, url, name) {
   capabilities.maxSize = 10ll * 1024 * 1024 * 1024;
   capabilities.preserveName.reset(new bool(true));
   capabilities.minRetention = 1ll * 24 * 60 * 1000;
@@ -11,10 +11,10 @@ setTargetType(TransferShTarget)
   capabilities.maxDownloads.reset(new long(LONG_MAX));
 }
 
-void TransferShTarget::uploadFile(BackendRequirements requirements,
-                                  const File& file,
-                                  std::function<void(std::string)> successCallback,
-                                  std::function<void(std::string)> errorCallback) {
+void TransferShBackend::uploadFile(BackendRequirements requirements,
+                                   const File& file,
+                                   std::function<void(std::string)> successCallback,
+                                   std::function<void(std::string)> errorCallback) {
   httplib::Headers headers;
   long long retentionPeriod = determineRetention(requirements);
   int retentionDays = retentionPeriod / (24ll * 60 * 1000);
@@ -46,22 +46,22 @@ void TransferShTarget::uploadFile(BackendRequirements requirements,
   }
 }
 
-std::vector<Target*> TransferShTarget::loadTargets() {
-  std::vector<Target*> targets;
+std::vector<Backend*> TransferShBackend::loadBackends() {
+  std::vector<Backend*> backends;
 
   try {
-    Target* httpTarget = new TransferShTarget(false, "transfer.sh", "transfer.sh (HTTP)");
-    targets.push_back(httpTarget);
+    Backend* httpBackend = new TransferShBackend(false, "transfer.sh", "transfer.sh (HTTP)");
+    backends.push_back(httpBackend);
   } catch(std::invalid_argument& e) {
-    logger.log(Logger::Info) << "Failed to load TransferShTarget (http):" << e.what() << "\n";
+    logger.log(Logger::Info) << "Failed to load TransferShBackend (http):" << e.what() << "\n";
   }
 
   try {
-    Target* httpsTarget = new TransferShTarget(true, "transfer.sh", "transfer.sh");
-    targets.push_back(httpsTarget);
+    Backend* httpsBackend = new TransferShBackend(true, "transfer.sh", "transfer.sh");
+    backends.push_back(httpsBackend);
   } catch(std::invalid_argument& e) {
-    logger.log(Logger::Info) << "Failed to load TransferShTarget (https):" << e.what() << "\n";
+    logger.log(Logger::Info) << "Failed to load TransferShBackend (https):" << e.what() << "\n";
   }
 
-  return targets;
+  return backends;
 }

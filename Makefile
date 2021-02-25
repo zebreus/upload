@@ -19,11 +19,11 @@ MAKEOVERRIDES += CXX:=$(CXX)
 export COMMON_CXX_FLAGS :=  -std=c++2a -O3 $(GCC_WARNING_FLAGS)
 export COMMON_LD_FLAGS := -Wl,-as-needed -Wl,-z,relro,-z,now -O3
 
-TARGETS_DIR = targets
-TARGETS_BUILD_DIR = ../../$(BUILD_DIR)
-TARGETS += nullpointer transfersh oshi
-STATIC_TARGET_LIBS = $(TARGETS:%=$(BUILD_DIR)/lib%.a)
-SHARED_TARGET_LIBS = $(TARGETS:%=$(BUILD_DIR)/lib%.so)
+BACKENDS_DIR = backends
+BACKENDS_BUILD_DIR = ../../$(BUILD_DIR)
+BACKENDS += nullpointer transfersh oshi
+STATIC_BACKEND_LIBS = $(BACKENDS:%=$(BUILD_DIR)/lib%.a)
+SHARED_BACKEND_LIBS = $(BACKENDS:%=$(BUILD_DIR)/lib%.so)
 
 # TODO improve this
 # If set to yeah, the targets are build as shared libraries
@@ -49,17 +49,17 @@ ifeq ($(DYNAMIC),yeah)
 # dynamic loading
 LD_FLAGS += -ldl -rdynamic
 
-$(BUILD_DIR)/$(UPLOAD): $(OBJS) $(SHARED_TARGET_LIBS)
+$(BUILD_DIR)/$(UPLOAD): $(OBJS) $(SHARED_BACKEND_LIBS)
 	$(CXX) $(OBJS) -o $@ $(LD_FLAGS)
 
 else
 
 # static linking
-LD_FLAGS += $(STATIC_TARGET_LIBS)
-CXX_FLAGS += $(TARGETS:%=-I$(TARGETS_DIR)/%)
+LD_FLAGS += $(STATIC_BACKEND_LIBS)
+CXX_FLAGS += $(BACKENDS:%=-I$(BACKENDS_DIR)/%)
 CXX_FLAGS += -DSTATIC_LOADER
 
-$(BUILD_DIR)/$(UPLOAD): $(OBJS) $(STATIC_TARGET_LIBS)
+$(BUILD_DIR)/$(UPLOAD): $(OBJS) $(STATIC_BACKEND_LIBS)
 	$(CXX) $(OBJS) -o $@ $(LD_FLAGS)
 
 endif
@@ -69,13 +69,13 @@ $(BUILD_DIR)/%.cpp.o: %.cpp
 	$(MKDIR) $(dir $@)
 	$(CXX) $(CXX_FLAGS) -c $< -o $@
 
-$(STATIC_TARGET_LIBS): $(BUILD_DIR)/lib%.a :
-	$(MAKE) -C $(TARGETS_DIR)/$* $(TARGETS_BUILD_DIR)/lib$*.a
+$(STATIC_BACKEND_LIBS): $(BUILD_DIR)/lib%.a :
+	$(MAKE) -C $(BACKENDS_DIR)/$* $(BACKENDS_BUILD_DIR)/lib$*.a
 
-$(SHARED_TARGET_LIBS): $(BUILD_DIR)/lib%.so :
-	$(MAKE) -C $(TARGETS_DIR)/$* $(TARGETS_BUILD_DIR)/lib$*.so
+$(SHARED_BACKEND_LIBS): $(BUILD_DIR)/lib%.so :
+	$(MAKE) -C $(BACKENDS_DIR)/$* $(BACKENDS_BUILD_DIR)/lib$*.so
 
-.PHONY: clean $(SHARED_TARGET_LIBS) $(STATIC_TARGET_LIBS)
+.PHONY: clean $(SHARED_BACKEND_LIBS) $(STATIC_BACKEND_LIBS)
 
 -include $(DEPS)
 
@@ -84,7 +84,7 @@ clean:
 
 ## Section for formatting
 
-ALL_SOURCE_FOLDERS := $(SRC_DIR) include $(wildcard $(TARGETS_DIR)/*)
+ALL_SOURCE_FOLDERS := $(SRC_DIR) include $(wildcard $(BACKENDS_DIR)/*)
 ALL_CXX_FILES := $(wildcard $(ALL_SOURCE_FOLDERS:%=%/*.cpp)) $(wildcard $(ALL_SOURCE_FOLDERS:%=%/*.hpp))
 
 format: 

@@ -1,15 +1,15 @@
-#ifndef HTTPLIB_TARGET_HPP
-#define HTTPLIB_TARGET_HPP
+#ifndef HTTPLIB_BACKEND_HPP
+#define HTTPLIB_BACKEND_HPP
 
 #include <httplib.h>
 
+#include <backend.hpp>
 #include <logger.hpp>
-#include <target.hpp>
 
-class HttplibTarget: public Target {
+class HttplibBackend: public Backend {
  public:
-  HttplibTarget(bool useSSL, const std::string& url, const std::string& name);
-  virtual ~HttplibTarget();
+  HttplibBackend(bool useSSL, const std::string& url, const std::string& name);
+  virtual ~HttplibBackend();
   virtual std::string getName() const override;
   virtual bool staticSettingsCheck(BackendRequirements requirements) const override;
   virtual bool staticFileCheck(BackendRequirements requirements, const File& file) const override;
@@ -44,7 +44,7 @@ class HttplibTarget: public Target {
   long determineMaxDownloads(BackendRequirements requirements);
 };
 
-inline HttplibTarget::HttplibTarget(bool useSSL, const std::string& url, const std::string& name)
+inline HttplibBackend::HttplibBackend(bool useSSL, const std::string& url, const std::string& name)
     : name(name), url(url), useSSL(useSSL), client(nullptr) {
   if(useSSL) {
     capabilities.http = false;
@@ -60,19 +60,19 @@ inline HttplibTarget::HttplibTarget(bool useSSL, const std::string& url, const s
   initializeClient();
 }
 
-inline HttplibTarget::~HttplibTarget() {
+inline HttplibBackend::~HttplibBackend() {
   delete client;
 }
 
-inline std::string HttplibTarget::getName() const {
+inline std::string HttplibBackend::getName() const {
   return name;
 }
 
-inline bool HttplibTarget::staticFileCheck(BackendRequirements requirements, const File& file) const {
+inline bool HttplibBackend::staticFileCheck(BackendRequirements requirements, const File& file) const {
   return checkFile(file);
 }
 
-inline bool HttplibTarget::staticSettingsCheck(BackendRequirements requirements) const {
+inline bool HttplibBackend::staticSettingsCheck(BackendRequirements requirements) const {
   if(!capabilities.meetsRequirements(requirements)) {
     logger.log(Logger::Topic::Debug) << "Not all requiredFeatures are supported\n";
     return false;
@@ -80,10 +80,10 @@ inline bool HttplibTarget::staticSettingsCheck(BackendRequirements requirements)
   return true;
 }
 
-inline void HttplibTarget::dynamicSettingsCheck(BackendRequirements requirements,
-                                                std::function<void()> successCallback,
-                                                std::function<void(std::string)> errorCallback,
-                                                int timeoutMillis) {
+inline void HttplibBackend::dynamicSettingsCheck(BackendRequirements requirements,
+                                                 std::function<void()> successCallback,
+                                                 std::function<void(std::string)> errorCallback,
+                                                 int timeoutMillis) {
   std::string errorMessage;
   if(isReachable(errorMessage)) {
     successCallback();
@@ -92,7 +92,7 @@ inline void HttplibTarget::dynamicSettingsCheck(BackendRequirements requirements
   }
 }
 
-inline bool HttplibTarget::isReachable(std::string& errorMessage) {
+inline bool HttplibBackend::isReachable(std::string& errorMessage) {
   if(auto result = client->Post("/")) {
     logger.log(Logger::Topic::Debug) << "Received response from " << name << " (" << result->status << "): " << result->body << '\n';
     return true;
@@ -102,7 +102,7 @@ inline bool HttplibTarget::isReachable(std::string& errorMessage) {
   }
 }
 
-inline bool HttplibTarget::checkFile(const File& file) const {
+inline bool HttplibBackend::checkFile(const File& file) const {
   if(file.getContent().size() > capabilities.maxSize) {
     logger.log(Logger::Topic::Info) << name << " has a size limit of 512 MiB per file." << '\n';
     return false;
@@ -110,7 +110,7 @@ inline bool HttplibTarget::checkFile(const File& file) const {
   return true;
 }
 
-inline void HttplibTarget::initializeClient() {
+inline void HttplibBackend::initializeClient() {
   if(client == nullptr) {
     std::string httpUrl;
     if(useSSL) {
@@ -133,7 +133,7 @@ inline void HttplibTarget::initializeClient() {
   }
 }
 
-inline std::string HttplibTarget::getErrorMessage(httplib::Error error) {
+inline std::string HttplibBackend::getErrorMessage(httplib::Error error) {
   std::stringstream message;
   switch(error) {
     case httplib::Connection:
@@ -163,7 +163,7 @@ inline std::string HttplibTarget::getErrorMessage(httplib::Error error) {
   return message.str();
 }
 
-inline bool HttplibTarget::checkMimetype(const File& file, const std::vector<std::string>& blacklist) const {
+inline bool HttplibBackend::checkMimetype(const File& file, const std::vector<std::string>& blacklist) const {
   std::string mimetype = file.getMimetype();
   for(const std::string& blacklistEntry : blacklist) {
     if(blacklistEntry == mimetype) {
@@ -174,7 +174,7 @@ inline bool HttplibTarget::checkMimetype(const File& file, const std::vector<std
   return true;
 }
 
-inline std::string HttplibTarget::postForm(const httplib::MultipartFormDataItems& form, const httplib::Headers& headers) {
+inline std::string HttplibBackend::postForm(const httplib::MultipartFormDataItems& form, const httplib::Headers& headers) {
   if(auto result = client->Post("/", headers, form)) {
     logger.log(Logger::Topic::Debug) << "Received response from " << name << " (" << result->status << "): " << result->body << '\n';
     if(result->status != 200) {
@@ -191,7 +191,7 @@ inline std::string HttplibTarget::postForm(const httplib::MultipartFormDataItems
   }
 }
 
-inline std::string HttplibTarget::putFile(const File& file, const httplib::Headers& headers) {
+inline std::string HttplibBackend::putFile(const File& file, const httplib::Headers& headers) {
   std::string path = "/";
   path.append(file.getName());
   if(auto result = client->Put(path.c_str(), headers, file.getContent().data(), file.getContent().size(), file.getMimetype().c_str())) {
@@ -210,7 +210,7 @@ inline std::string HttplibTarget::putFile(const File& file, const httplib::Heade
   }
 }
 
-inline std::vector<std::string> HttplibTarget::findValidUrls(const std::string& input) {
+inline std::vector<std::string> HttplibBackend::findValidUrls(const std::string& input) {
   std::regex urlExpression(urlRegexString, std::regex::icase | std::regex::ECMAScript);
   auto urlsBegin = std::sregex_iterator(input.begin(), input.end(), urlExpression);
   auto urlsEnd = std::sregex_iterator();
@@ -224,7 +224,7 @@ inline std::vector<std::string> HttplibTarget::findValidUrls(const std::string& 
   return resultsVector;
 }
 
-inline long long HttplibTarget::determineRetention(BackendRequirements requirements) {
+inline long long HttplibBackend::determineRetention(BackendRequirements requirements) {
   // Assumes that a valid retention duration exists
   long long period = capabilities.maxRetention;
   if(requirements.maxRetention != nullptr) {
@@ -235,7 +235,7 @@ inline long long HttplibTarget::determineRetention(BackendRequirements requireme
   return period;
 }
 
-inline long HttplibTarget::determineMaxDownloads(BackendRequirements requirements) {
+inline long HttplibBackend::determineMaxDownloads(BackendRequirements requirements) {
   // Assumes that a valid download limit exists
   long maxDownloads = LONG_MAX;
   if(capabilities.maxDownloads != nullptr) {

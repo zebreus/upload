@@ -1,16 +1,16 @@
-#include "nullpointertarget.hpp"
+#include "nullpointerbackend.hpp"
 
-setTargetType(NullPointerTarget)
+setBackendType(NullPointerBackend)
 
-    NullPointerTarget::NullPointerTarget(bool useSSL, const std::string& url, const std::string& name)
-    : HttplibTarget(useSSL, url, name) {
+    NullPointerBackend::NullPointerBackend(bool useSSL, const std::string& url, const std::string& name)
+    : HttplibBackend(useSSL, url, name) {
   capabilities.maxSize = 512 * 1024 * 1024;
   capabilities.preserveName.reset(new bool(false));
   capabilities.minRetention = 30ll * 24 * 60 * 1000;
   capabilities.maxRetention = 365ll * 24 * 60 * 1000;
 }
 
-bool NullPointerTarget::staticFileCheck(BackendRequirements requirements, const File& file) const {
+bool NullPointerBackend::staticFileCheck(BackendRequirements requirements, const File& file) const {
   if(!checkFile(file)) {
     return false;
   }
@@ -40,10 +40,10 @@ bool NullPointerTarget::staticFileCheck(BackendRequirements requirements, const 
   return true;
 }
 
-void NullPointerTarget::uploadFile(BackendRequirements requirements,
-                                   const File& file,
-                                   std::function<void(std::string)> successCallback,
-                                   std::function<void(std::string)> errorCallback) {
+void NullPointerBackend::uploadFile(BackendRequirements requirements,
+                                    const File& file,
+                                    std::function<void(std::string)> successCallback,
+                                    std::function<void(std::string)> errorCallback) {
   httplib::MultipartFormDataItems items = {{"file", file.getContent(), file.getName(), file.getMimetype()}};
 
   try {
@@ -60,7 +60,7 @@ void NullPointerTarget::uploadFile(BackendRequirements requirements,
   }
 }
 
-long long NullPointerTarget::calculateRetentionPeriod(const File& f) const {
+long long NullPointerBackend::calculateRetentionPeriod(const File& f) const {
   long long min_age = capabilities.minRetention;
   long long max_age = capabilities.maxRetention;
   size_t max_size = capabilities.maxSize;
@@ -75,22 +75,22 @@ long long NullPointerTarget::calculateRetentionPeriod(const File& f) const {
   }
 }
 
-std::vector<Target*> NullPointerTarget::loadTargets() {
-  std::vector<Target*> targets;
+std::vector<Backend*> NullPointerBackend::loadBackends() {
+  std::vector<Backend*> backends;
 
   try {
-    Target* httpTarget = new NullPointerTarget(false, "0x0.st", "THE NULL POINTER (HTTP)");
-    targets.push_back(httpTarget);
+    Backend* httpBackend = new NullPointerBackend(false, "0x0.st", "THE NULL POINTER (HTTP)");
+    backends.push_back(httpBackend);
   } catch(std::invalid_argument& e) {
-    logger.log(Logger::Info) << "Failed to load nullpointertarget (http):" << e.what() << "\n";
+    logger.log(Logger::Info) << "Failed to load nullpointerbackend (http):" << e.what() << "\n";
   }
 
   try {
-    Target* httpsTarget = new NullPointerTarget(true, "0x0.st", "THE NULL POINTER");
-    targets.push_back(httpsTarget);
+    Backend* httpsBackend = new NullPointerBackend(true, "0x0.st", "THE NULL POINTER");
+    backends.push_back(httpsBackend);
   } catch(std::invalid_argument& e) {
-    logger.log(Logger::Info) << "Failed to load nullpointertarget (https):" << e.what() << "\n";
+    logger.log(Logger::Info) << "Failed to load nullpointerbackend (https):" << e.what() << "\n";
   }
 
-  return targets;
+  return backends;
 }
