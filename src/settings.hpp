@@ -2,6 +2,7 @@
 #define SETTINGS_HPP
 
 #include <cxxopts.hpp>
+#include <filesystem>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -9,6 +10,10 @@
 #include "backend.hpp"
 #include "backendrequirements.hpp"
 #include "quit.hpp"
+
+#ifdef __unix__
+#include <unistd.h>
+#endif
 
 class Settings {
  public:
@@ -53,6 +58,8 @@ class Settings {
   bool parseDirectoryArchive(const auto& parseResult, Settings::Mode mode);
   std::string parseArchiveName(const auto& parseResult, Settings::ArchiveType type);
   void initializeLogger(const auto& parseResult) const;
+
+  bool isInteractiveSession() const;
 };
 
 #endif

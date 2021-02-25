@@ -182,8 +182,12 @@ std::vector<std::string> Settings::parseFiles(const auto& parseResult, Settings:
   bool filesRequired = (mode == Mode::Archive || mode == Mode::Individual);
   if(parseResult.count("file") == 0) {
     if(filesRequired) {
-      logger.log(Logger::Fatal) << "You have to specify files to upload. Use upload like 'upload file.txt file2.txt'" << '\n';
-      quit::invalidCliUsage();
+      if(isInteractiveSession()) {
+        logger.log(Logger::Fatal) << "You have to specify files to upload. Use upload like 'upload file.txt file2.txt'" << '\n';
+        quit::invalidCliUsage();
+      } else {
+        return {"-"};
+      }
     } else {
       return {};
     }
@@ -271,3 +275,15 @@ void Settings::initializeLogger(const auto& parseResult) const {
       break;
   }
 }
+
+#ifdef __unix__
+bool Settings::isInteractiveSession() const {
+  return isatty(fileno(stdin));
+}
+#elif defined(__windows__)
+bool Settings::isInteractiveSession() const {
+  return _isatty(_fileno(stdin));
+}
+#else
+#error "Settings::isStdinInteractive is not implemented for your operating system. It is probably quite trivial to implement it yourself."
+#endif
