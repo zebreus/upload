@@ -2,26 +2,17 @@
 
 #include <zip_file.hpp>
 
-Loader::Loader(const Settings& settings): settings(settings) {
+Loader::Loader(const Settings& settings): settings(settings), threadCounter(0) {
   loadFilesFromSettings();
 }
 
-Loader::~Loader() {
-  for(std::istream* stream : streams) {
-    if(stream->good()) {
-      logger.log(Logger::Topic::Debug) << "Closing good stream\n";
-    }
-    if(stream != &std::cin) {
-      delete stream;
-    }
-  }
-}
+Loader::~Loader() {}
 
 void Loader::loadFilesFromSettings() {
   if(settings.getMode() == Settings::Mode::Archive || settings.getMode() == Settings::Mode::Individual) {
     for(const std::string& fileName : settings.getFiles()) {
       if(fileName == "-") {
-        streams.push_back(&std::cin);
+        startStreamThread("-");
       } else {
         loadPath(fileName);
       }
@@ -66,7 +57,11 @@ void Loader::loadPath(const std::filesystem::path& path) {
 
 void Loader::loadRegularFile(const std::filesystem::path& path) {
   if(isReadable(path)) {
-    unprocessedFiles.push(path);
+    {
+      std::unique_lock<std::mutex> lock(unprocessedFilesAccessMutex);
+      unprocessedFiles.push(path);
+    }
+    unprocessedFilesConditionVariable.notify_one();
   } else {
     logger.log(Logger::Fatal) << "You do not have the permission to access the file " << path
                               << " . Contact your system administrator about that, or something. You can give everyone read "
@@ -90,7 +85,6 @@ void Loader::loadSymlink(std::filesystem::path path) {
       }
       redirects++;
       if(redirects > maxRedirects) {
-        // TODO This check wont work
         logger.log(Logger::Fatal) << "Stopped reading symlink path " << path << ", because there were too many redirections." << '\n';
         quit::failedReadingFiles();
       }
@@ -105,7 +99,11 @@ void Loader::loadSymlink(std::filesystem::path path) {
 
 void Loader::loadDirectory(const std::filesystem::path& path) {
   if(isReadable(path)) {
-    unprocessedFiles.push(path);
+    {
+      std::unique_lock<std::mutex> lock(unprocessedFilesAccessMutex);
+      unprocessedFiles.push(path);
+    }
+    unprocessedFilesConditionVariable.notify_one();
   } else {
     logger.log(Logger::Fatal) << "You do not have the permission to access the directory " << path
                               << " . Contact your system administrator about that, or something. You can give everyone read "
@@ -116,13 +114,61 @@ void Loader::loadDirectory(const std::filesystem::path& path) {
 }
 
 void Loader::loadFifoFile(const std::filesystem::path& path) {
-  logger.log(Logger::Topic::Fatal) << "Fifo files are not yet implemented." << '\n';
-  quit::failedReadingFiles();
+  if(isReadable(path)) {
+    startStreamThread(path);
+  } else {
+    logger.log(Logger::Fatal) << "You do not have the permission to access the fifo file " << path
+                              << " . Contact your system administrator about that, or something." << '\n';
+    quit::failedReadingFiles();
+  }
 }
 
 void Loader::loadCharacterSpecialFile(const std::filesystem::path& path) {
-  logger.log(Logger::Topic::Fatal) << "Character special files are not yet implemented." << '\n';
-  quit::failedReadingFiles();
+  if(isReadable(path)) {
+    startStreamThread(path);
+  } else {
+    logger.log(Logger::Fatal) << "You do not have the permission to access the character special file " << path
+                              << " . Contact your system administrator about that, or something." << '\n';
+    quit::failedReadingFiles();
+  }
+}
+
+void Loader::startStreamThread(const std::filesystem::path& path) {
+  threads.emplace_back([this, path]() {
+    {
+      std::unique_lock<std::mutex> lock(unprocessedFilesAccessMutex);
+      ++threadCounter;
+    }
+    std::istream* stream;
+    if(path == "-") {
+      stream = &std::cin;
+    } else {
+      stream = new std::ifstream(path);
+    }
+    while(stream->good()) {
+      static constexpr int maxPathSize = 512;
+      char buffer[maxPathSize];
+      stream->getline(buffer, maxPathSize);
+      logger.log(Logger::Debug) << "After  Good: " << stream->good() << "Bad: " << stream->bad() << "fail: " << stream->fail()
+                                << "eof: " << stream->eof() << '\n';
+      if(!stream->fail()) {
+        loadPath(std::string(buffer));
+      } else if(!stream->eof()) {
+        logger.log(Logger::Fatal) << "Failed to read file from stream" << '\n';
+        quit::failedReadingFiles();
+      }
+    }
+    if(stream != &std::cin) {
+      delete stream;
+    }
+    {
+      std::unique_lock<std::mutex> lock(unprocessedFilesAccessMutex);
+      --threadCounter;
+    }
+    unprocessedFilesConditionVariable.notify_one();
+    logger.log(Logger::Debug) << "Stream finished" << '\n';
+  });
+  return;
 }
 
 std::filesystem::file_status Loader::ensureFileStatus(const std::filesystem::path& path) {
@@ -221,8 +267,22 @@ std::shared_ptr<File> Loader::createArchive(const std::vector<std::filesystem::p
   return std::make_shared<File>(name, archiveStream.str());
 }
 
-bool Loader::getUnprocessedPath() {
-  return false;
+std::filesystem::path Loader::getUnprocessedPath() {
+  // Read until a real path is read
+  std::unique_lock<std::mutex> lock(unprocessedFilesAccessMutex);
+  unprocessedFilesConditionVariable.wait(lock, [this]() {
+    return (unprocessedFiles.size() > 0) || (threadCounter == 0);
+  });
+  if(unprocessedFiles.size() > 0) {
+    std::filesystem::path path = unprocessedFiles.front();
+    unprocessedFiles.pop();
+    return path;
+  } else if(threadCounter == 0) {
+    throw std::runtime_error("No more files");
+  }
+
+  logger.log(Logger::Debug) << "Condition variable stopped waiting, but no condition was fulfilled. This should not happen." << '\n';
+  throw std::runtime_error("Something went wrong");
 }
 
 std::shared_ptr<File> Loader::getNextFile() {
@@ -232,31 +292,29 @@ std::shared_ptr<File> Loader::getNextFile() {
     case Settings::Mode::List:
       break;
     case Settings::Mode::Individual: {
-      if(unprocessedFiles.empty()) {
-        if(!getUnprocessedPath()) {
-          logger.log(Logger::Topic::Debug) << "All files loaded.";
-          return std::shared_ptr<File>(nullptr);
+      try {
+        std::filesystem::path path = getUnprocessedPath();
+        if(std::filesystem::is_directory(path)) {
+          return createArchive(std::vector<std::filesystem::path>{path}, path.filename(), settings.getDirectoryArchive());
+        } else {
+          return std::make_shared<File>(path);
         }
-      }
-
-      std::filesystem::path path = unprocessedFiles.front();
-      unprocessedFiles.pop();
-      if(std::filesystem::is_directory(path)) {
-        return createArchive(std::vector<std::filesystem::path>{path}, path.filename(), settings.getDirectoryArchive());
-      } else {
-        return std::make_shared<File>(path);
+      } catch(const std::runtime_error& error) {
+        logger.log(Logger::Topic::Debug) << "All files loaded.";
+        return std::shared_ptr<File>(nullptr);
       }
     }
     case Settings::Mode::Archive: {
-      while(getUnprocessedPath()) {
-      }
-      if(unprocessedFiles.empty()) {
-        return std::shared_ptr<File>(nullptr);
-      }
       std::vector<std::filesystem::path> allPaths;
-      while(!unprocessedFiles.empty()) {
-        allPaths.push_back(unprocessedFiles.front());
-        unprocessedFiles.pop();
+      try {
+        while(true) {
+          allPaths.push_back(getUnprocessedPath());
+        }
+      } catch(const std::runtime_error& error) {
+      }
+
+      if(allPaths.empty()) {
+        return std::shared_ptr<File>(nullptr);
       }
       return createArchive(allPaths, settings.getArchiveName(), settings.getDirectoryArchive());
     }

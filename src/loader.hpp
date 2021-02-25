@@ -1,12 +1,14 @@
 #ifndef LOADER_HPP
 #define LOADER_HPP
 
+#include <condition_variable>
 #include <cstddef>
 #include <iostream>
 #include <iterator>
 #include <memory>
 #include <queue>
 #include <string>
+#include <thread>
 #include <vector>
 
 #include "file.hpp"
@@ -22,6 +24,7 @@ concept FileProcessingFunction = requires(T function, const File& file) {
   function(file);
 };
 
+// TODO split this megaclass
 class Loader {
   struct FileIterator {
     using iterator_category = std::input_iterator_tag;
@@ -44,9 +47,15 @@ class Loader {
     std::shared_ptr<File> file;
   };
 
+  std::vector<std::jthread> threads;
+  int threadCounter;
+
+  // The unprocessed files mutex should be locked, when unprocessedFiles or threadCounter gets modified.
+  std::condition_variable unprocessedFilesConditionVariable;
+  std::mutex unprocessedFilesAccessMutex;
+
   // All files/directories that are not yet loaded
   std::queue<std::filesystem::path> unprocessedFiles;
-  std::vector<std::istream*> streams;
   Settings settings;
 
  public:
@@ -68,17 +77,20 @@ class Loader {
   void loadFifoFile(const std::filesystem::path& path);
   void loadCharacterSpecialFile(const std::filesystem::path& path);
 
+  // Starts a thread that reads new filenames from the file at
+  // Undefined behaviour, if path is not a readable file
+  void startStreamThread(const std::filesystem::path& path);
+
   // Ensure that a path exists and information about it can be optained
   std::filesystem::file_status ensureFileStatus(const std::filesystem::path& path);
 
   // Ensure that a file has read permissions
   bool isReadable(const std::filesystem::path& status);
 
-  // Load a new path into unprocessed files. This may block for a while. Returns false, if every stream is finished.
-  // Guarantees, that unprocessedFiles is not empty, if true is returned
-  bool getUnprocessedPath();
+  // Wait until the next path is available and return it.
+  // Throws std::runtime_error, when all paths have been read
+  std::filesystem::path getUnprocessedPath();
 
-  bool isDirectory(const std::filesystem::path& path);
   std::shared_ptr<File> createArchive(const std::vector<std::filesystem::path>& files, const std::string& name, bool directoryCreation);
 };
 
