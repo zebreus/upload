@@ -89,3 +89,11 @@ ALL_CXX_FILES := $(wildcard $(ALL_SOURCE_FOLDERS:%=%/*.cpp)) $(wildcard $(ALL_SO
 
 format: 
 	clang-format -style=file -i $(ALL_CXX_FILES)
+	
+## Section for documentation
+
+.PHONY: manual
+manual: upload.1
+
+upload.1: upload.ronn
+	ronn upload.ronn --roff
