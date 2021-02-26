@@ -319,7 +319,7 @@ BackendRequirements Settings::parseBackendRequirements(const auto& parseResult) 
   }
 
   if(parseResult.count("autodelete")) {
-    requirements.maxRandomPart.reset(new long(parseResult["autodelete"].template as<int>()));
+    requirements.maxDownloads.reset(new long(parseResult["autodelete"].template as<int>()));
   }
 
   if(parseResult.count("min-size")) {
@@ -329,17 +329,17 @@ BackendRequirements Settings::parseBackendRequirements(const auto& parseResult) 
   }
 
   if(parseResult.count("max-url-length")) {
-    int maxUrlLength = parseResult["autodelete"].template as<int>();
-    if(maxUrlLength > 5) {
-      logger.log(Logger::Fatal) << "You specified a maximum url length of less than 5 characters (" << maxUrlLength
-                                << "). That does not seem logical, as the shortest url possible is only 5 characters. x.xx/" << '\n';
+    int maxUrlLength = parseResult["max-url-length"].template as<int>();
+    if(maxUrlLength < 11) {
+      logger.log(Logger::Fatal) << "You specified a maximum url length of less than 11 characters (" << maxUrlLength
+                                << "). That does not seem logical, as the shortest url possible is only 11 characters. http:/x.xx/" << '\n';
       quit::invalidCliUsage();
     }
-    if(maxUrlLength > 10) {
+    if(maxUrlLength < 14) {
       logger.log(Logger::Info) << "You specified a maximum url length of less than 10 characters (" << maxUrlLength
                                << "). This is not an error, but there probably are no backends with urls that short." << '\n';
     }
-    requirements.maxRandomPart.reset(new long(maxUrlLength));
+    requirements.maxUrlLength.reset(new long(maxUrlLength));
   }
 
   return requirements;
