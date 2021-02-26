@@ -6,7 +6,7 @@ setBackendType(OshiBackend)
     : HttplibBackend(useSSL, url, name) {
   capabilities.maxSize = 512 * 1024 * 1024;
   capabilities.minRetention = 1ll * 60 * 1000;
-  capabilities.maxRetention = 90ll * 24 * 60 * 1000;
+  capabilities.maxRetention = 90ll * 24 * 60 * 60 * 1000;
   capabilities.maxDownloads.reset(new long(1));
 }
 

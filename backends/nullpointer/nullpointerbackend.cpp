@@ -6,8 +6,8 @@ setBackendType(NullPointerBackend)
     : HttplibBackend(useSSL, url, name) {
   capabilities.maxSize = 512 * 1024 * 1024;
   capabilities.preserveName.reset(new bool(false));
-  capabilities.minRetention = 30ll * 24 * 60 * 1000;
-  capabilities.maxRetention = 365ll * 24 * 60 * 1000;
+  capabilities.minRetention = 30ll * 24 * 60 * 60 * 1000;
+  capabilities.maxRetention = 365ll * 24 * 60 * 60 * 1000;
 }
 
 bool NullPointerBackend::staticFileCheck(BackendRequirements requirements, const File& file) const {

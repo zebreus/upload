@@ -6,8 +6,8 @@ setBackendType(TransferShBackend)
     : HttplibBackend(useSSL, url, name) {
   capabilities.maxSize = 10ll * 1024 * 1024 * 1024;
   capabilities.preserveName.reset(new bool(true));
-  capabilities.minRetention = 1ll * 24 * 60 * 1000;
-  capabilities.maxRetention = 14ll * 24 * 60 * 1000;
+  capabilities.minRetention = 1ll * 24 * 60 * 60 * 1000;
+  capabilities.maxRetention = 14ll * 24 * 60 * 60 * 1000;
   capabilities.maxDownloads.reset(new long(LONG_MAX));
 }
 
@@ -17,7 +17,7 @@ void TransferShBackend::uploadFile(BackendRequirements requirements,
                                    std::function<void(std::string)> errorCallback) {
   httplib::Headers headers;
   long long retentionPeriod = determineRetention(requirements);
-  int retentionDays = retentionPeriod / (24ll * 60 * 1000);
+  int retentionDays = retentionPeriod / (24ll * 60 * 60 * 1000);
   headers.insert({"Max-Days", std::to_string(retentionDays)});
 
   if(requirements.maxDownloads != nullptr) {
