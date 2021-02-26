@@ -14,14 +14,6 @@ Settings::ArchiveType Settings::getArchiveType() const {
   return archiveType;
 }
 
-Settings::HttpsSetting Settings::getHttpsSetting() const {
-  return httpsSetting;
-}
-
-bool Settings::getPreserveName() const {
-  return preserveName;
-}
-
 std::string Settings::getArchiveName() const {
   return archiveName;
 }
@@ -39,26 +31,6 @@ bool Settings::getDirectoryArchive() const {
 }
 
 BackendRequirements Settings::getBackendRequirements() const {
-  BackendRequirements requirements;
-
-  if(preserveName) {
-    requirements.preserveName.reset(new bool(true));
-  }
-
-  switch(httpsSetting) {
-    case HttpsSetting::Forbid:
-      requirements.http.reset(new bool(true));
-      requirements.https.reset(new bool(false));
-      break;
-    case HttpsSetting::Force:
-      requirements.http.reset(new bool(false));
-      requirements.https.reset(new bool(true));
-      break;
-    case HttpsSetting::Allow:
-    default:
-      break;
-  }
-
   return requirements;
 }
 
@@ -77,6 +49,7 @@ cxxopts::Options Settings::generateParser() {
   options.add_options("Backend selection")
   ("b,backend", "Add a specific backend. If this option is used, the default order is discarded.", cxxopts::value<std::vector<std::string>>())
   ("p,preserve-name", "Ensure that the filenames are preserved.")
+  ("no-preserve-name", "Ensure that the filenames are not preserved.")
   ("s,ssl", "Ensure the use of https.")
   ("no-ssl", "Ensure the use of http.")
   ("min-retention", "Make sure the file is kept longer than TIME.", cxxopts::value<std::string>(), "TIME")
@@ -118,13 +91,12 @@ void Settings::parseOptions(int argc, char** argv) {
     mode = parseMode(result);
     files = parseFiles(result, mode);
     archiveType = parseArchiveType(result);
-    httpsSetting = parseHttpsSetting(result);
     if(result.count("backend")) {
       requestedBackends = result["backend"].template as<std::vector<std::string>>();
     }
     archiveName = parseArchiveName(result, archiveType);
-    preserveName = result.count("preserve-name");
     directoryArchive = parseDirectoryArchive(result, mode);
+    requirements = parseBackendRequirements(result);
   } catch(const cxxopts::OptionException& e) {
     logger.log(Logger::Fatal) << e.what() << '\n';
     quit::invalidCliUsage();
@@ -176,23 +148,6 @@ Settings::ArchiveType Settings::parseArchiveType(const auto& parseResult) {
     }
   }
   return defaultArchiveType;
-}
-
-Settings::HttpsSetting Settings::parseHttpsSetting(const auto& parseResult) {
-  if(parseResult.count("ssl") && parseResult.count("no-ssl")) {
-    logger.log(Logger::Fatal) << "You cannot have ssl and no-ssl, try leaving one away" << '\n';
-    quit::invalidCliUsage();
-  }
-
-  if(parseResult.count("ssl")) {
-    return HttpsSetting::Force;
-  }
-
-  if(parseResult.count("no-ssl")) {
-    return HttpsSetting::Forbid;
-  }
-
-  return HttpsSetting::Allow;
 }
 
 std::vector<std::string> Settings::parseFiles(const auto& parseResult, Settings::Mode mode) {
@@ -290,6 +245,214 @@ void Settings::initializeLogger(const auto& parseResult) const {
       logger.setTopicState(Logger::Topic::Debug, true);
       logger.setTopicState(Logger::Topic::Url, true);
       break;
+  }
+}
+
+BackendRequirements Settings::parseBackendRequirements(const auto& parseResult) {
+  BackendRequirements requirements;
+
+  if(parseResult.count("preserve-name") && parseResult.count("no-preserve-name")) {
+    logger.log(Logger::Fatal) << "You set an '--preserve-name' and '--no-preserve-name' together. If you want to use hosts that preserve "
+                                 "your name and those that do not, just leave both options away."
+                              << '\n';
+    quit::invalidCliUsage();
+  }
+  if(parseResult.count("preserve-name")) {
+    requirements.preserveName.reset(new bool(true));
+  }
+  if(parseResult.count("no-preserve-name")) {
+    requirements.preserveName.reset(new bool(false));
+  }
+
+  if(parseResult.count("ssl") && parseResult.count("no-ssl")) {
+    logger.log(Logger::Fatal) << "You cannot have ssl and no-ssl, try leaving one away" << '\n';
+    quit::invalidCliUsage();
+  }
+
+  if(parseResult.count("ssl")) {
+    requirements.https.reset(new bool(true));
+  }
+  if(parseResult.count("no-ssl")) {
+    requirements.http.reset(new bool(true));
+  }
+
+  if(parseResult.count("min-size")) {
+    requirements.minSize.reset();
+  }
+
+  if(parseResult.count("min-retention")) {
+    std::string minRetentionString = parseResult["min-retention"].template as<std::string>();
+    long long minRetention = parseTimeString(minRetentionString);
+    requirements.minRetention.reset(new long long(minRetention));
+  }
+
+  if(parseResult.count("max-retention")) {
+    std::string maxRetentionString = parseResult["max-retention"].template as<std::string>();
+    long long maxRetention = parseTimeString(maxRetentionString);
+    requirements.maxRetention.reset(new long long(maxRetention));
+  }
+
+  if(requirements.maxRetention != nullptr && requirements.minRetention != nullptr) {
+    if(*requirements.maxRetention < *requirements.minRetention) {
+      logger.log(Logger::Fatal) << "You specified a maximum retention period of " << *requirements.maxRetention
+                                << "ms, but that is smaller than your minimum rention period of " << *requirements.minRetention
+                                << "ms. You could increase your minimum retention period." << '\n';
+      quit::invalidCliUsage();
+    }
+  }
+
+  if(parseResult.count("min-random-part")) {
+    requirements.minRandomPart.reset((new long(parseResult["min-random-part"].template as<int>())));
+  }
+
+  if(parseResult.count("max-random-part")) {
+    requirements.maxRandomPart.reset(new long(parseResult["max-random-part"].template as<int>()));
+  }
+
+  if(requirements.maxRandomPart != nullptr && requirements.minRandomPart != nullptr) {
+    if(*requirements.maxRandomPart < *requirements.minRandomPart) {
+      logger.log(Logger::Fatal) << "You specified a maximum random part of " << *requirements.maxRandomPart
+                                << " characters, but that is smaller than your maximum random part of " << *requirements.minRandomPart
+                                << " characters. You could increase your minimum random part." << '\n';
+      quit::invalidCliUsage();
+    }
+  }
+
+  if(parseResult.count("autodelete")) {
+    requirements.maxRandomPart.reset(new long(parseResult["autodelete"].template as<int>()));
+  }
+
+  if(parseResult.count("min-size")) {
+    std::string minSizeString = parseResult["min-size"].template as<std::string>();
+    unsigned long minSize = parseSizeString(minSizeString);
+    requirements.minSize.reset(new unsigned long(minSize));
+  }
+
+  if(parseResult.count("max-url-length")) {
+    int maxUrlLength = parseResult["autodelete"].template as<int>();
+    if(maxUrlLength > 5) {
+      logger.log(Logger::Fatal) << "You specified a maximum url length of less than 5 characters (" << maxUrlLength
+                                << "). That does not seem logical, as the shortest url possible is only 5 characters. x.xx/" << '\n';
+      quit::invalidCliUsage();
+    }
+    if(maxUrlLength > 10) {
+      logger.log(Logger::Info) << "You specified a maximum url length of less than 10 characters (" << maxUrlLength
+                               << "). This is not an error, but there probably are no backends with urls that short." << '\n';
+    }
+    requirements.maxRandomPart.reset(new long(maxUrlLength));
+  }
+
+  return requirements;
+}
+
+long long Settings::parseTimeString(const std::string& timeString) {
+  size_t suffixStart = timeString.find_first_not_of("0123456789");
+  if(suffixStart == std::string::npos) {
+    suffixStart = timeString.size();
+  }
+  std::string numberString = timeString.substr(0, suffixStart);
+  std::string suffixString = timeString.substr(suffixStart);
+  try {
+    long long number = std::stoll(numberString);
+    if(suffixString.size() <= 1) {
+      switch(suffixString.c_str()[0]) {
+        case 'd':
+        case 'D':
+          number *= 24;
+        case 'h':
+        case 'H':
+          number *= 60;
+        case 'm':
+        case 'M':
+          number *= 60;
+        case 's':
+        case 'S':
+          number *= 1000;
+        case 0:
+          return number;
+        default:
+          break;
+      }
+    }
+    logger.log(Logger::Fatal) << "Your time value " << timeString
+                              << " has an invalid suffix. It should be a positive integer suffixed by the unit of time ('s'econds "
+                                 ",'m'inutes ,'h'ours or 'd'ays). If you do not add a suffix the number is interpreted as milliseconds."
+                              << '\n';
+    quit::invalidCliUsage();
+
+  } catch(const std::invalid_argument& error) {
+    logger.log(Logger::Fatal)
+        << "Your time value " << timeString
+        << " does not seem to start with a number. It should be a positive integer suffixed by the unit of time ('s'econds ,'m'inutes "
+           ",'h'ours or 'd'ays). If you do not add a suffix the number is interpreted as milliseconds."
+        << '\n';
+    quit::invalidCliUsage();
+  } catch(const std::out_of_range& error) {
+    logger.log(Logger::Fatal) << "The number part of your time value " << timeString << " is too big, the maximum is " << LLONG_MAX
+                              << ". It should be a positive integer suffixed by the unit of time ('s'econds ,'m'inutes ,'h'ours or "
+                                 "'d'ays). If you do not add a suffix the number is interpreted as milliseconds."
+                              << '\n';
+    quit::invalidCliUsage();
+  }
+}
+
+long Settings::parseSizeString(const std::string& sizeString) {
+  size_t suffixStart = sizeString.find_first_not_of("0123456789");
+  if(suffixStart == std::string::npos) {
+    suffixStart = sizeString.size();
+  }
+  std::string numberString = sizeString.substr(0, suffixStart);
+  std::string suffixString = sizeString.substr(suffixStart);
+  for(int i = 0; i < suffixString.size(); i++) {
+    suffixString[i] = std::tolower(suffixString[i]);
+  }
+  try {
+    long number = std::stol(numberString);
+    int multiplier = 1;
+    if(suffixString.size() == 0) {
+      multiplier = 1;
+    } else if(suffixString.size() == 2 && suffixString[1] == 'b') {
+      multiplier = 1000;
+    } else if(suffixString.size() == 1 || (suffixString.size() == 3 && suffixString[1] == 'i' && suffixString[1] == 'b')) {
+      multiplier = 1024;
+    } else {
+      logger.log(Logger::Fatal) << "Your size value " << sizeString
+                                << " has an invalid suffix. It should be a positive integer suffixed by the unit of size (for example K, "
+                                   "KB or KiB). If you do not add a suffix the number is interpreted as bytes."
+                                << '\n';
+      quit::invalidCliUsage();
+    }
+
+    switch(suffixString.c_str()[0]) {
+      case 'g':
+        number *= multiplier;
+      case 'm':
+        number *= multiplier;
+      case 'k':
+        number *= multiplier;
+      case 0:
+        return number;
+      default:
+        logger.log(Logger::Fatal)
+            << "Your size value " << sizeString
+            << " has an invalid suffix. It should be a positive integer suffixed by the unit of size (for example K, KB or KiB). If you do "
+               "not add a suffix the number is interpreted as bytes. Currently only sizes with Kilo, Mega or Gigabyte are supported"
+            << '\n';
+        quit::invalidCliUsage();
+    }
+
+  } catch(const std::invalid_argument& error) {
+    logger.log(Logger::Fatal) << "Your size value " << sizeString
+                              << " does not seem to start with a number. It should be a positive integer suffixed by the unit of size (for "
+                                 "example K, KB or KiB). If you do not add a suffix the number is interpreted as bytes."
+                              << '\n';
+    quit::invalidCliUsage();
+  } catch(const std::out_of_range& error) {
+    logger.log(Logger::Fatal) << "The number part of your size value " << sizeString << " is too big, the maximum is " << LONG_MAX
+                              << ". It should be a positive integer suffixed by the unit of size (for example K, KB or KiB). If you do not "
+                                 "add a suffix the number is interpreted as bytes."
+                              << '\n';
+    quit::invalidCliUsage();
   }
 }
 
