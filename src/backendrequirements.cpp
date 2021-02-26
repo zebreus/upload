@@ -14,7 +14,7 @@ bool BackendCapabilities::meetsRequirements(BackendRequirements requirements) co
   }
 
   if(requirements.minSize != nullptr) {
-    if(*requirements.minSize < maxSize) {
+    if(*requirements.minSize > maxSize) {
       return false;
     }
   }
@@ -26,13 +26,13 @@ bool BackendCapabilities::meetsRequirements(BackendRequirements requirements) co
   }
 
   if(requirements.minRetention != nullptr) {
-    if(*requirements.minRetention < maxRetention) {
+    if(*requirements.minRetention > maxRetention) {
       return false;
     }
   }
 
   if(requirements.maxRetention != nullptr) {
-    if(*requirements.maxRetention > minRetention) {
+    if(*requirements.maxRetention < minRetention) {
       return false;
     }
   }
@@ -45,5 +45,93 @@ bool BackendCapabilities::meetsRequirements(BackendRequirements requirements) co
     }
   }
 
+  if(requirements.maxDownloads != nullptr) {
+    if(maxDownloads == nullptr) {
+      return false;
+    } else if(*requirements.maxDownloads > *maxDownloads) {
+      return false;
+    }
+  }
+
+  bool preserveNameForRequirements = determinePreserveName(requirements);
+  if(requirements.minRandomPart != nullptr) {
+    if(preserveNameForRequirements) {
+      if(*requirements.minRandomPart > randomPart) {
+        return false;
+      }
+    } else {
+      if(*requirements.minRandomPart > randomPartWithRandomFilename) {
+        return false;
+      }
+    }
+  }
+
+  if(requirements.maxRandomPart != nullptr) {
+    if(preserveNameForRequirements) {
+      if(*requirements.maxRandomPart < randomPart) {
+        return false;
+      }
+    } else {
+      if(*requirements.maxRandomPart < randomPartWithRandomFilename) {
+        return false;
+      }
+    }
+  }
+
+  if(requirements.maxUrlLength != nullptr) {
+    if(preserveNameForRequirements) {
+      if(*requirements.maxUrlLength < urlLength) {
+        return false;
+      }
+    } else {
+      if(*requirements.maxUrlLength < urlLengthWithRandomFilename) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
+// Helper to determine wheter to preserve the filename for the given requirements or not
+bool BackendCapabilities::determinePreserveName(BackendRequirements requirements) const {
+  // Check if requirements or capabilities specify preserveName
+  if(requirements.preserveName != nullptr) {
+    return *requirements.preserveName;
+  }
+  if(preserveName != nullptr) {
+    return *preserveName;
+  }
+
+  // Check if one option violates min or max random part
+  if(requirements.minRandomPart != nullptr) {
+    if(*requirements.minRandomPart > randomPart) {
+      return false;
+    }
+    if(*requirements.minRandomPart > randomPartWithRandomFilename) {
+      return true;
+    }
+  }
+
+  if(requirements.maxRandomPart != nullptr) {
+    if(*requirements.maxRandomPart < randomPart) {
+      return false;
+    }
+    if(*requirements.maxRandomPart < randomPartWithRandomFilename) {
+      return true;
+    }
+  }
+
+  // Check if one option violates max url length
+  if(requirements.maxUrlLength != nullptr) {
+    if(*requirements.maxUrlLength < urlLength) {
+      return false;
+    }
+    if(*requirements.maxUrlLength < urlLengthWithRandomFilename) {
+      return true;
+    }
+  }
+
+  // If still all both options are valid, return preserve name.
   return true;
 }
