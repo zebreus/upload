@@ -8,18 +8,20 @@ setBackendType(OshiBackend)
   capabilities.minRetention = 1ll * 60 * 1000;
   capabilities.maxRetention = 90ll * 24 * 60 * 60 * 1000;
   capabilities.maxDownloads.reset(new long(1));
+  capabilities.randomPart = 6;
+  capabilities.randomPartWithRandomFilename = 6;
+  capabilities.urlLength = 22 + (useSSL ? 1 : 0);
+  capabilities.urlLengthWithRandomFilename = 21 + (useSSL ? 1 : 0);
 }
 
 void OshiBackend::uploadFile(BackendRequirements requirements,
                              const File& file,
                              std::function<void(std::string)> successCallback,
                              std::function<void(std::string)> errorCallback) {
-  httplib::MultipartFormDataItems items = {{"f", file.getContent(), file.getName(), file.getMimetype()}};
-
-  httplib::Headers headers = generateHeaders(requirements, file);
+  std::shared_ptr<httplib::MultipartFormDataItems> items = generateFormData(requirements, file);
 
   try {
-    std::string response = postForm(items, headers);
+    std::string response = postForm(*items);
     std::vector<std::string> urls = findValidUrls(response);
     logger.log(Logger::Topic::Debug) << "Received " << urls.size() << " urls." << '\n';
     if(urls.size() == 2) {
@@ -35,27 +37,27 @@ void OshiBackend::uploadFile(BackendRequirements requirements,
   }
 }
 
-httplib::Headers OshiBackend::generateHeaders(BackendRequirements requirements, const File& file) {
-  httplib::Headers headers;
+std::shared_ptr<httplib::MultipartFormDataItems> OshiBackend::generateFormData(BackendRequirements requirements, const File& file) {
+  std::shared_ptr<httplib::MultipartFormDataItems> formData(new httplib::MultipartFormDataItems());
+  formData->push_back(httplib::MultipartFormData("f", file.getContent(), file.getName(), file.getMimetype()));
 
   long long retentionPeriod = determineRetention(requirements);
   int retentionMinutes = retentionPeriod / (60 * 1000);
-  headers.insert({"expire", std::to_string(retentionMinutes)});
+  formData->push_back({"expire", std::to_string(retentionMinutes)});
 
   if(requirements.maxDownloads != nullptr && *requirements.maxDownloads != 0) {
-    headers.insert({"autodestroy", "1"});
+    formData->push_back({"autodestroy", "1"});
   }
 
-  if(requirements.preserveName != nullptr) {
-    if(*requirements.preserveName) {
-      headers.insert({"shorturl", "0"});
-      headers.insert({"randomizefn", "0"});
-    } else {
-      headers.insert({"randomizefn", "1"});
-    }
+  if(capabilities.determinePreserveName(requirements)) {
+    formData->push_back({"shorturl", "0"});
+    formData->push_back({"randomizefn", "0"});
+  } else {
+    formData->push_back({"randomizefn", "1"});
+    formData->push_back({"shorturl", "1"});
   }
 
-  return headers;
+  return formData;
 }
 
 std::vector<Backend*> OshiBackend::loadBackends() {

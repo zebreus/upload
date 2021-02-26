@@ -19,7 +19,7 @@ class OshiBackend: public HttplibBackend {
   static std::vector<Backend*> loadBackends();
 
  private:
-  httplib::Headers generateHeaders(BackendRequirements requirements, const File& file);
+  std::shared_ptr<httplib::MultipartFormDataItems> generateFormData(BackendRequirements requirements, const File& file);
 };
 
 #endif
