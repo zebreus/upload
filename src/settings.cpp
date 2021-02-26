@@ -72,18 +72,35 @@ cxxopts::Options Settings::generateParser() {
   ("a,archive", "Pack all files and directories into an archive")
   ("i,individual", "Upload all files or directory individually")
   ("l,list", "List all available upload backends for the current request, ordered by preference")
-  ("archive-type", "Sets the archive type", cxxopts::value<std::string>())
-  ("d,directory-archive", "Put the contents of directories in a directory in the archive.")
-  ("r,root-archive", "Put the contents of directories in the root of the archive.")
-  ("t,backend", "Add a specific backend. If this option is used, the default order is discarded.", cxxopts::value<std::vector<std::string>>())
+  ("file", "The files that will be uploaded.", cxxopts::value<std::vector<std::string>>(), "FILE")
+  ;
+  options.add_options("Backend selection")
+  ("b,backend", "Add a specific backend. If this option is used, the default order is discarded.", cxxopts::value<std::vector<std::string>>())
   ("p,preserve-name", "Ensure that the filenames are preserved.")
   ("s,ssl", "Ensure the use of https.")
   ("no-ssl", "Ensure the use of http.")
+  ("min-retention", "Make sure the file is kept longer than TIME.", cxxopts::value<std::string>(), "TIME")
+  ("max-retention", "Make sure the file is not kept longer than TIME.", cxxopts::value<std::string>(), "TIME")
+  ("min-size", "Only use backend that accept files bigger than BYTES.", cxxopts::value<std::string>(), "BYTES")
+  ("autodelete", "Delete the file after NUM downloads.", cxxopts::value<int>()->implicit_value("1"), "NUM")
+  ("min-random-part", "Each url has a random part longer than NUM characters", cxxopts::value<int>(), "NUM")
+  ("max-random-part", "Each url has a random part shorter than NUM characters", cxxopts::value<int>(), "NUM")
+  ("max-url-length", "Each generated url will be shorter than NUM characters.", cxxopts::value<int>(), "NUM")
+  ;
+  options.add_options("Mode independent")
+  ("archive-type", "Sets the archive type", cxxopts::value<std::string>()->default_value("1"), "TYPE")
+  ("r,root-archive", "Put the contents of directories in the root of the archive.")
+  ("d,directory-archive", "Put the contents of directories in a directory in the archive.")
+  ;
+  options.add_options("Individual mode")
+  ("c,continue", "Do not abort if the upload of a file failed.")
+  ;
+  options.add_options("Archive mode")
   ("n,name", "The name of the created archive in archive mode.", cxxopts::value<std::string>())
-  ("file", "The files that will be uploaded.", cxxopts::value<std::vector<std::string>>())
   ;
   // clang-format on
   options.parse_positional({"file"});
+  options.positional_help("[FILE]...");
   return options;
 }
 
