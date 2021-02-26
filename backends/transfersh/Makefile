@@ -10,7 +10,7 @@ TARGET := transfersh
 
 INCLUDE_FLAGS += -I$(BASE_DIR)/include
 INCLUDE_FLAGS += -isystem $(LIB_DIR)/cpp-httplib
-CXX_FLAGS := $(COMMON_CXX_FLAGS) $(INCLUDE_FLAGS) -MMD -MP -std=c++2a -pthread -fPIC -fno-use-cxa-atexit -DCPPHTTPLIB_OPENSSL_SUPPORT
+CXX_FLAGS := $(COMMON_CXX_FLAGS) $(INCLUDE_FLAGS) -MMD -MP -std=c++2a -pthread -DCPPHTTPLIB_OPENSSL_SUPPORT -fPIC -fno-use-cxa-atexit 
 LD_FLAGS := -pthread -lcrypto -lssl
 
 TARGET_STATIC := lib$(TARGET).a

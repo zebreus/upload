@@ -1,5 +1,6 @@
-#include <localbackend.hpp>
 #include <nullpointerbackend.hpp>
+#include <oshibackend.hpp>
+#include <transfershbackend.hpp>
 
 #include "backendloader.hpp"
 
@@ -10,7 +11,11 @@ std::vector<std::shared_ptr<Backend>> loadBackends() {
     backends.push_back(std::shared_ptr<Backend>(backend));
   }
 
-  for(Backend* backend : LocalBackend::loadBackends()) {
+  for(Backend* backend : OshiBackend::loadBackends()) {
+    backends.push_back(std::shared_ptr<Backend>(backend));
+  }
+  
+  for(Backend* backend : TransferShBackend::loadBackends()) {
     backends.push_back(std::shared_ptr<Backend>(backend));
   }
 

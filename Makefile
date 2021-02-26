@@ -16,8 +16,9 @@ CXX=g++
 MKDIR=mkdir -p
 MAKEOVERRIDES += CXX:=$(CXX)
 
-export COMMON_CXX_FLAGS :=  -std=c++2a -O3 $(GCC_WARNING_FLAGS)
-export COMMON_LD_FLAGS := -Wl,-as-needed -Wl,-z,relro,-z,now -O3
+export COMMON_CXX_FLAGS := -std=c++2a -O3
+#$(GCC_WARNING_FLAGS)
+export COMMON_LD_FLAGS := -O3 -Wl,-as-needed -Wl,-z,relro,-z,now 
 
 BACKENDS_DIR = backends
 BACKENDS_BUILD_DIR = ../../$(BUILD_DIR)
@@ -33,7 +34,6 @@ UPLOAD := upload
 INCLUDE_FLAGS += -Iinclude
 INCLUDE_FLAGS += -isystem $(LIB_DIR)/cxxopts/include
 INCLUDE_FLAGS += -isystem $(LIB_DIR)/miniz-cpp
-INCLUDE_FLAGS += -isystem $(LIB_DIR)/cpp-httplib
 INCLUDE_FLAGS += -I$(SRC_DIR)
 CXX_FLAGS := $(COMMON_CXX_FLAGS) $(INCLUDE_FLAGS) -MMD -MP -pthread -DUPLOAD_PLUGIN_DIR=$(INSTALL_PLUGIN_DIR)
 LD_FLAGS := $(COMMON_LD_FLAGS) -pthread
@@ -43,6 +43,7 @@ OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
 DEPS := $(OBJS:.o=.d)
 
 all: $(BUILD_DIR)/$(UPLOAD)
+
 
 ifeq ($(DYNAMIC),yeah)
 
@@ -55,9 +56,10 @@ $(BUILD_DIR)/$(UPLOAD): $(OBJS) $(SHARED_BACKEND_LIBS)
 else
 
 # static linking
-LD_FLAGS += $(STATIC_BACKEND_LIBS)
+CXX_FLAGS += -isystem $(LIB_DIR)/cpp-httplib
+LD_FLAGS += $(STATIC_BACKEND_LIBS) -pthread -lcrypto -lssl
 CXX_FLAGS += $(BACKENDS:%=-I$(BACKENDS_DIR)/%)
-CXX_FLAGS += -DSTATIC_LOADER
+CXX_FLAGS += -DSTATIC_LOADER -DCPPHTTPLIB_OPENSSL_SUPPORT
 
 $(BUILD_DIR)/$(UPLOAD): $(OBJS) $(STATIC_BACKEND_LIBS)
 	$(CXX) $(OBJS) -o $@ $(LD_FLAGS)
