@@ -9,6 +9,10 @@ setBackendType(TransferShBackend)
   capabilities.minRetention = 1ll * 24 * 60 * 60 * 1000;
   capabilities.maxRetention = 14ll * 24 * 60 * 60 * 1000;
   capabilities.maxDownloads.reset(new long(LONG_MAX));
+  capabilities.randomPart = 5;
+  capabilities.randomPartWithRandomFilename = 5;
+  capabilities.urlLength = 29 + (useSSL ? 1 : 0);
+  capabilities.urlLengthWithRandomFilename = 29 + (useSSL ? 1 : 0);
 }
 
 void TransferShBackend::uploadFile(BackendRequirements requirements,

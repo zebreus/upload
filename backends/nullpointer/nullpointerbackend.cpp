@@ -8,6 +8,10 @@ setBackendType(NullPointerBackend)
   capabilities.preserveName.reset(new bool(false));
   capabilities.minRetention = 30ll * 24 * 60 * 60 * 1000;
   capabilities.maxRetention = 365ll * 24 * 60 * 60 * 1000;
+  capabilities.randomPart = 4;
+  capabilities.randomPartWithRandomFilename = 4;
+  capabilities.urlLength = 14 + (useSSL ? 1 : 0);
+  capabilities.urlLengthWithRandomFilename = 14 + (useSSL ? 1 : 0);
 }
 
 bool NullPointerBackend::staticFileCheck(BackendRequirements requirements, const File& file) const {
