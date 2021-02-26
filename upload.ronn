@@ -75,7 +75,7 @@ All letters are converted to lowercase before evaluation.
  * `-l`, `--list` :
    List all available upload backends for the current request, ordered by preference and exit without uploading anything.
 
-### Mode independend options apply in archive and in individual mode.
+### Mode independent options apply in archive and in individual mode.
 
 
  * `--archive-type`=_zip_ :
@@ -119,11 +119,12 @@ All letters are converted to lowercase before evaluation.
  * `--min-size`=<size> :
    Ensure, that the every choosen backend supports uploading files bigger than <size> bytes.
 
- * `--max-downloads`=<downloads> :
-   Ensure, that each file gets deleted after <downloads> downloads.
+ * `--autodelete`=[<downloads>] :
+   Ensure, that each file gets deleted after <downloads> downloads. If downloads is not specified, it defaults to 1.
 
  * `--min-random-part`=<characters> :
    Ensure, that each url has a random part of at least <characters> characters.
+   If the backend does generate a random filename, that is included.
 
  * `--max-random-part`=<characters> :
    Ensure, that each url has a random part not bigger than <characters> characters.
