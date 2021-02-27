@@ -33,6 +33,11 @@ std::string Uploader::uploadFile(const File& file) {
 }
 
 std::string Uploader::uploadFile(const File& file, std::shared_ptr<Backend> backend) {
+  if(!backend->staticFileCheck(settings.getBackendRequirements(), file)) {
+    std::stringstream message;
+    message << backend->getName() << " does not accept files like " << file.getName() << ".";
+    throw std::runtime_error(message.str());
+  }
   std::promise<std::string> urlPromise;
   backend->uploadFile(
       settings.getBackendRequirements(),
