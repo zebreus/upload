@@ -113,3 +113,15 @@ manual: upload.1
 
 upload.1: upload.ronn
 	ronn upload.ronn --roff
+
+## Section for optaining header with cert bundle data
+
+cacert.pem:
+	wget https://curl.se/ca/cacert.pem
+
+generator: generator.cpp
+	g++ generator.cpp -o generator
+
+include/cacert.hpp: cacert.pem generator
+	./generator cacert.pem cacert.hpp
+	mv cacert.hpp include
