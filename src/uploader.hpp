@@ -27,7 +27,7 @@ class Uploader {
   std::string uploadFile(const File& file, std::shared_ptr<Backend> backend);
   void printAvailableBackends();
   void initializeBackends();
-  void checkNextBackend();
+  bool checkNextBackend();
   void checkNextBackend(std::promise<std::shared_ptr<Backend>>& promise);
 };
 

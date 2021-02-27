@@ -13,8 +13,11 @@ int main(int argc, char** argv) {
   Uploader uploader(settings);
 
   for(const File& file : loader) {
-    logger.log(Logger::Debug) << "Uploading " << file.getName() << '\n';
-    logger.log(Logger::Url) << uploader.uploadFile(file) << std::endl;
+    try {
+      logger.log(Logger::Url) << uploader.uploadFile(file) << std::endl;
+    } catch(const std::runtime_error& error) {
+      logger.log(Logger::Info) << error.what() << '\n';
+    }
   }
 
   return 0;

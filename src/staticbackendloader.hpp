@@ -14,7 +14,7 @@ std::vector<std::shared_ptr<Backend>> loadBackends() {
   for(Backend* backend : OshiBackend::loadBackends()) {
     backends.push_back(std::shared_ptr<Backend>(backend));
   }
-  
+
   for(Backend* backend : TransferShBackend::loadBackends()) {
     backends.push_back(std::shared_ptr<Backend>(backend));
   }

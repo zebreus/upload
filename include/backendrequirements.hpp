@@ -34,7 +34,7 @@ struct BackendCapabilities {
   // If set, the file can be deleted after a maximum of this many downloads
   // It is assumed, that there is always an option to not delete files
   std::shared_ptr<long> maxDownloads;
-  //TODO Do not check the predicted url here
+  // TODO Do not check the predicted url here
   // Length of the random part, if the filename is preserved
   long randomPart;
   // Length of the random part, if the filename is not preserved

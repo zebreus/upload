@@ -19,8 +19,7 @@ std::string Uploader::uploadFile(const File& file) {
     }
   }
 
-  while(true) {
-    checkNextBackend();
+  while(checkNextBackend()) {
     std::shared_ptr<Backend> backend = checkedBackends.back();
     try {
       return uploadFile(file, backend);
@@ -29,6 +28,15 @@ std::string Uploader::uploadFile(const File& file) {
     } catch(...) {
       logger.log(Logger::Info) << "Unexpected error while uploading " << file.getName() << " to " << backend->getName() << "." << '\n';
     }
+  }
+
+  std::stringstream message;
+  message << "Failed to upload " << file.getName() << " to any backend.";
+  if(settings.getContinue()) {
+    throw std::runtime_error(message.str());
+  } else {
+    logger.log(Logger::Fatal) << message.str() << '\n';
+    quit::failedToUpload();
   }
 }
 
@@ -105,19 +113,24 @@ void Uploader::initializeBackends() {
   }
 }
 
-void Uploader::checkNextBackend() {
+bool Uploader::checkNextBackend() {
   std::promise<std::shared_ptr<Backend>> nextBackendPromise;
   std::future<std::shared_ptr<Backend>> future = nextBackendPromise.get_future();
-  ;
   checkNextBackend(nextBackendPromise);
-  std::shared_ptr<Backend> nextBackend = future.get();
-  checkedBackends.push_back(nextBackend);
+  try {
+    std::shared_ptr<Backend> nextBackend = future.get();
+    checkedBackends.push_back(nextBackend);
+    return true;
+  } catch(const std::runtime_error& e) {
+    logger.log(Logger::Debug) << e.what() << '\n';
+    return false;
+  }
 }
 
 void Uploader::checkNextBackend(std::promise<std::shared_ptr<Backend>>& promise) {
   if(backends.size() == 0) {
-    logger.log(Logger::Fatal) << "There is no backend matching your requirements" << '\n';
-    quit::failedToUpload();
+    promise.set_exception(std::make_exception_ptr(std::runtime_error("There is no backend matching your requirements")));
+    return;
   }
   std::shared_ptr<Backend> nextBackend = backends.front();
   backends.pop_front();

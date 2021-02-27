@@ -34,6 +34,10 @@ BackendRequirements Settings::getBackendRequirements() const {
   return requirements;
 }
 
+bool Settings::getContinue() {
+  return continueUploading;
+}
+
 cxxopts::Options Settings::generateParser() {
   cxxopts::Options options("upload", "Upload files to the internet");
   // clang-format off
@@ -97,6 +101,7 @@ void Settings::parseOptions(int argc, char** argv) {
     archiveName = parseArchiveName(result, archiveType);
     directoryArchive = parseDirectoryArchive(result, mode);
     requirements = parseBackendRequirements(result);
+    continueUploading = result.count("continue");
   } catch(const cxxopts::OptionException& e) {
     logger.log(Logger::Fatal) << e.what() << '\n';
     quit::invalidCliUsage();

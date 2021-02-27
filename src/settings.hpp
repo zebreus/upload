@@ -30,6 +30,7 @@ class Settings {
   std::vector<std::string> files;
   bool directoryArchive;
   BackendRequirements requirements;
+  bool continueUploading;
 
   static constexpr ArchiveType defaultArchiveType = ArchiveType::Zip;
 
@@ -42,6 +43,7 @@ class Settings {
   std::vector<std::string> getFiles() const;
   bool getDirectoryArchive() const;
   BackendRequirements getBackendRequirements() const;
+  bool getContinue();
 
  private:
   cxxopts::Options generateParser();
