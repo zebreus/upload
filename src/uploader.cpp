@@ -95,7 +95,8 @@ void Uploader::initializeBackends() {
         }
       }
       if(!found) {
-        logger.log(Logger::Topic::Fatal) << "Unable to find requested backend '" << backendName << "'. Maybe check for a typo in its name.";
+        logger.log(Logger::Topic::Fatal) << "Unable to find requested backend '" << backendName << "'. Maybe check for a typo in its name."
+                                         << '\n';
         quit::invalidCliUsage();
       }
       unmatchedBackends = nextBackends;
@@ -134,6 +135,7 @@ void Uploader::checkNextBackend(std::promise<std::shared_ptr<Backend>>& promise)
   }
   std::shared_ptr<Backend> nextBackend = backends.front();
   backends.pop_front();
+  logger.log(Logger::Debug) << "Checking backend " << nextBackend->getName() << "." << '\n';
   nextBackend->dynamicSettingsCheck(
       settings.getBackendRequirements(),
       [this, &promise, &nextBackend]() {
@@ -147,6 +149,7 @@ void Uploader::checkNextBackend(std::promise<std::shared_ptr<Backend>>& promise)
         }
       },
       [this, &promise](const std::string& message) {
+        logger.log(Logger::Debug) << "Failed to check backend: " << message << "." << '\n';
         checkNextBackend(promise);
       },
       200);

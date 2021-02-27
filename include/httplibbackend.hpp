@@ -147,9 +147,13 @@ inline std::string HttplibBackend::getErrorMessage(httplib::Error error) {
       message << name << " seems to be online, but something went wrong.";
       break;
     case httplib::SSLConnection:
+      message << "Failed establishing a SSL connection";
+      break;
     case httplib::SSLLoadingCerts:
+      message << "Unable to load SSL certificates";
+      break;
     case httplib::SSLServerVerification:
-      message << "Some kind of SSL error happened.";
+      message << "Unable to verify the servers SSL certificate";
       break;
     case httplib::ExceedRedirectCount:
       message << "Too many redirects. This is probably not your fault.";

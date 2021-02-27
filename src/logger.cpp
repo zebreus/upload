@@ -6,6 +6,7 @@ Logger::Logger() {
   topicState[Topic::Fatal] = true;
   topicState[Topic::Print] = true;
   topicState[Topic::Url] = true;
+  topicState[Topic::Info] = false;
   topicState[Topic::Debug] = false;
 }
 
@@ -38,7 +39,7 @@ std::ostream& Logger::log(Topic topic) {
       case Topic::Debug:
         return std::clog;
       case Topic::Info:
-        return std::cerr;
+        return std::clog;
       case Topic::Url:
         return std::cout;
       default:
