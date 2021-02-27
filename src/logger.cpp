@@ -31,10 +31,10 @@ std::ostream& Logger::log(Topic topic) {
 
   if(getTopicState(topic)) {
     switch(topic) {
-      case Topic::Print:
-        return std::cout;
       case Topic::Fatal:
         return std::clog;
+      case Topic::Print:
+        return std::cout;
       case Topic::Debug:
         return std::clog;
       case Topic::Info:

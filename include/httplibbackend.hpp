@@ -5,22 +5,23 @@
 
 #include <backend.hpp>
 #include <logger.hpp>
+#include <utility>
 
 class HttplibBackend: public Backend {
  public:
-  HttplibBackend(bool useSSL, const std::string& url, const std::string& name);
-  virtual ~HttplibBackend();
-  virtual std::string getName() const override;
-  virtual bool staticSettingsCheck(BackendRequirements requirements) const override;
-  virtual bool staticFileCheck(BackendRequirements requirements, const File& file) const override;
-  virtual void dynamicSettingsCheck(BackendRequirements requirements,
-                                    std::function<void()> successCallback,
-                                    std::function<void(std::string)> errorCallback,
-                                    int timeoutMillis) override;
-  virtual void uploadFile(BackendRequirements requirements,
-                          const File& file,
-                          std::function<void(std::string)> successCallback,
-                          std::function<void(std::string)> errorCallback) override = 0;
+  HttplibBackend(bool useSSL, std::string url, std::string name);
+  ~HttplibBackend() override;
+  [[nodiscard]] std::string getName() const override;
+  [[nodiscard]] bool staticSettingsCheck(BackendRequirements requirements) const override;
+  [[nodiscard]] bool staticFileCheck(BackendRequirements requirements, const File& file) const override;
+  void dynamicSettingsCheck(BackendRequirements requirements,
+                            std::function<void()> successCallback,
+                            std::function<void(std::string)> errorCallback,
+                            int timeoutMillis) override;
+  void uploadFile(BackendRequirements requirements,
+                  const File& file,
+                  std::function<void(std::string)> successCallback,
+                  std::function<void(std::string)> errorCallback) override = 0;
 
  protected:
   static constexpr auto userAgent = "upload/0.0";
@@ -32,20 +33,20 @@ class HttplibBackend: public Backend {
   BackendCapabilities capabilities;
   httplib::Client* client;
 
-  bool isReachable(std::string& errorMessage);
-  bool checkFile(const File& f) const;
+  [[nodiscard]] bool isReachable(std::string& errorMessage);
+  [[nodiscard]] bool checkFile(const File& f) const;
   void initializeClient();
   std::string getErrorMessage(httplib::Error error);
-  bool checkMimetype(const File& file, const std::vector<std::string>& blacklist) const;
+  [[nodiscard]] static bool checkMimetype(const File& file, const std::vector<std::string>& blacklist);
   std::string postForm(const httplib::MultipartFormDataItems& form, const httplib::Headers& headers = {});
   std::string putFile(const File& file, const httplib::Headers& headers = {});
-  std::vector<std::string> findValidUrls(const std::string& input);
-  long long determineRetention(BackendRequirements requirements);
-  long determineMaxDownloads(BackendRequirements requirements);
+  static std::vector<std::string> findValidUrls(const std::string& input);
+  [[nodiscard]] long long determineRetention(const BackendRequirements& requirements) const;
+  [[nodiscard]] long determineMaxDownloads(const BackendRequirements& requirements) const;
 };
 
-inline HttplibBackend::HttplibBackend(bool useSSL, const std::string& url, const std::string& name)
-    : name(name), url(url), useSSL(useSSL), client(nullptr) {
+inline HttplibBackend::HttplibBackend(bool useSSL, std::string url, std::string name)
+    : name(std::move(name)), url(std::move(url)), useSSL(useSSL), client(nullptr) {
   if(useSSL) {
     capabilities.http = false;
     capabilities.https = true;
@@ -116,13 +117,13 @@ inline void HttplibBackend::initializeClient() {
     if(useSSL) {
 #ifdef CPPHTTPLIB_OPENSSL_SUPPORT
       logger.log(Logger::Topic::Debug) << "HTTPS is supported\n";
-      httpUrl.append("https://");
+      httpUrl = "https://";
 #else
       logger.log(Logger::Topic::Debug) << "HTTPS is not supported\n";
       throw std::invalid_argument("https is disabled");
 #endif
     } else {
-      std::string httpUrl = "http://";
+      httpUrl = "http://";
     }
     httpUrl.append(url);
 
@@ -163,7 +164,7 @@ inline std::string HttplibBackend::getErrorMessage(httplib::Error error) {
   return message.str();
 }
 
-inline bool HttplibBackend::checkMimetype(const File& file, const std::vector<std::string>& blacklist) const {
+inline bool HttplibBackend::checkMimetype(const File& file, const std::vector<std::string>& blacklist) {
   std::string mimetype = file.getMimetype();
   for(const std::string& blacklistEntry : blacklist) {
     if(blacklistEntry == mimetype) {
@@ -224,7 +225,7 @@ inline std::vector<std::string> HttplibBackend::findValidUrls(const std::string&
   return resultsVector;
 }
 
-inline long long HttplibBackend::determineRetention(BackendRequirements requirements) {
+inline long long HttplibBackend::determineRetention(const BackendRequirements& requirements) const {
   // Assumes that a valid retention duration exists
   long long period = capabilities.maxRetention;
   if(requirements.maxRetention != nullptr) {
@@ -235,7 +236,7 @@ inline long long HttplibBackend::determineRetention(BackendRequirements requirem
   return period;
 }
 
-inline long HttplibBackend::determineMaxDownloads(BackendRequirements requirements) {
+inline long HttplibBackend::determineMaxDownloads(const BackendRequirements& requirements) const {
   // Assumes that a valid download limit exists
   long maxDownloads = LONG_MAX;
   if(capabilities.maxDownloads != nullptr) {

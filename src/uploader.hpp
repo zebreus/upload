@@ -20,11 +20,11 @@ class Uploader {
   Settings settings;
 
  public:
-  Uploader(const Settings& settings);
+  explicit Uploader(const Settings& settings);
   std::string uploadFile(const File& file);
 
  private:
-  std::string uploadFile(const File& file, std::shared_ptr<Backend> backend);
+  std::string uploadFile(const File& file, const std::shared_ptr<Backend>& backend);
   void printAvailableBackends();
   void initializeBackends();
   bool checkNextBackend();

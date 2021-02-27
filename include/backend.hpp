@@ -10,12 +10,12 @@
 
 class Backend {
  public:
-  virtual ~Backend() {}
-  virtual std::string getName() const = 0;
+  virtual ~Backend() = default;
+  [[nodiscard]] virtual std::string getName() const = 0;
   // Check if the backend can be used with these settings
-  virtual bool staticSettingsCheck(BackendRequirements requirements) const = 0;
+  [[nodiscard]] virtual bool staticSettingsCheck(BackendRequirements requirements) const = 0;
   // Check if the backend can accept that file
-  virtual bool staticFileCheck(BackendRequirements requirements, const File& file) const = 0;
+  [[nodiscard]] virtual bool staticFileCheck(BackendRequirements requirements, const File& file) const = 0;
   // Check if the backend is reachable.
   virtual void dynamicSettingsCheck(BackendRequirements requirements,
                                     std::function<void()> successCallback,
@@ -40,7 +40,7 @@ extern "C" struct BackendList {
 };
 
 // Defines a load_backends_dynamically function, that calls type::loadBackends().
-// You need to use this makro (or define 'BackendList load_backends_dynamically()' yourself) in your backend module, if you want it to be
+// You need to use this macro (or define 'BackendList load_backends_dynamically()' yourself) in your backend module, if you want it to be
 // dynamically loadable.
 #define setBackendType(type)                                                                                                        \
   extern "C" BackendList __attribute__((weak)) load_backends_dynamically();                                                         \

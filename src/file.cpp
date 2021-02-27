@@ -1,6 +1,7 @@
 #include "file.hpp"
 
 #include <map>
+#include <utility>
 
 #include "logger.hpp"
 #include "quit.hpp"
@@ -31,7 +32,7 @@ File::File(const std::filesystem::path& path) {
   name = path.filename();
 }
 
-File::File(const std::string& name, const std::string& content): name(name), content(content) {}
+File::File(std::string name, std::string content): name(std::move(name)), content(std::move(content)) {}
 
 std::string File::getName() const {
   return name;
@@ -95,7 +96,7 @@ std::string File::getMimetype() const {
                                                             {"class", "application/java-vm"}};
 
   std::string extension = std::filesystem::path(name).extension();
-  if(extension.size() > 0 && extension[0] == '.') {
+  if(!extension.empty() && extension[0] == '.') {
     extension = extension.substr(1);
   }
 

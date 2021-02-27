@@ -11,7 +11,7 @@
 
 class OshiBackend: public HttplibBackend {
  public:
-  OshiBackend(bool useSSL, const std::string& url = "oshi.at", const std::string& name = "OshiUpload");
+  explicit OshiBackend(bool useSSL, const std::string& url = "oshi.at", const std::string& name = "OshiUpload");
   void uploadFile(BackendRequirements requiredFeatures,
                   const File& file,
                   std::function<void(std::string)> successCallback,
@@ -19,7 +19,7 @@ class OshiBackend: public HttplibBackend {
   static std::vector<Backend*> loadBackends();
 
  private:
-  std::shared_ptr<httplib::MultipartFormDataItems> generateFormData(BackendRequirements requirements, const File& file);
+  std::shared_ptr<httplib::MultipartFormDataItems> generateFormData(const BackendRequirements& requirements, const File& file);
 };
 
 #endif

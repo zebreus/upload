@@ -38,17 +38,7 @@ bool BackendCapabilities::meetsRequirements(BackendRequirements requirements) co
   }
 
   if(requirements.maxDownloads != nullptr) {
-    if(maxDownloads == nullptr) {
-      return false;
-    } else if(*requirements.maxDownloads > *maxDownloads) {
-      return false;
-    }
-  }
-
-  if(requirements.maxDownloads != nullptr) {
-    if(maxDownloads == nullptr) {
-      return false;
-    } else if(*requirements.maxDownloads > *maxDownloads) {
+    if(maxDownloads == nullptr || (*requirements.maxDownloads > *maxDownloads)) {
       return false;
     }
   }
@@ -93,8 +83,8 @@ bool BackendCapabilities::meetsRequirements(BackendRequirements requirements) co
   return true;
 }
 
-// Helper to determine wheter to preserve the filename for the given requirements or not
-bool BackendCapabilities::determinePreserveName(BackendRequirements requirements) const {
+// Helper to determine whether to preserve the filename for the given requirements or not
+bool BackendCapabilities::determinePreserveName(const BackendRequirements& requirements) const {
   // Check if requirements or capabilities specify preserveName
   if(requirements.preserveName != nullptr) {
     return *requirements.preserveName;

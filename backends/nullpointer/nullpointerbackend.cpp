@@ -53,7 +53,7 @@ void NullPointerBackend::uploadFile(BackendRequirements requirements,
   try {
     std::string response = postForm(items);
     std::vector<std::string> urls = findValidUrls(response);
-    if(urls.size() >= 1) {
+    if(!urls.empty()) {
       successCallback(urls.front());
     } else {
       std::string message = "Response did not contain any urls";
@@ -69,7 +69,7 @@ long long NullPointerBackend::calculateRetentionPeriod(const File& f) const {
   long long max_age = capabilities.maxRetention;
   size_t max_size = capabilities.maxSize;
   size_t file_size = f.getContent().size();
-  long long retention = min_age + (-max_age + min_age) * pow((file_size / max_size - 1), 3);
+  long long retention = min_age + (-max_age + min_age) * static_cast<long long>(std::pow((file_size / max_size - 1), 3));
   if(retention < min_age) {
     return min_age;
   } else if(retention > max_age) {
@@ -86,14 +86,14 @@ std::vector<Backend*> NullPointerBackend::loadBackends() {
     Backend* httpBackend = new NullPointerBackend(false, "0x0.st", "THE NULL POINTER (HTTP)");
     backends.push_back(httpBackend);
   } catch(std::invalid_argument& e) {
-    logger.log(Logger::Info) << "Failed to load nullpointerbackend (http):" << e.what() << "\n";
+    logger.log(Logger::Info) << "Failed to load NullPointerBackend (http):" << e.what() << "\n";
   }
 
   try {
     Backend* httpsBackend = new NullPointerBackend(true, "0x0.st", "THE NULL POINTER");
     backends.push_back(httpsBackend);
   } catch(std::invalid_argument& e) {
-    logger.log(Logger::Info) << "Failed to load nullpointerbackend (https):" << e.what() << "\n";
+    logger.log(Logger::Info) << "Failed to load NullPointerBackend (https):" << e.what() << "\n";
   }
 
   return backends;

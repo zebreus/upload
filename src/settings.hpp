@@ -1,8 +1,7 @@
 #ifndef SETTINGS_HPP
 #define SETTINGS_HPP
 
-#include <limits.h>
-
+#include <climits>
 #include <cxxopts.hpp>
 #include <filesystem>
 #include <iostream>
@@ -36,19 +35,19 @@ class Settings {
 
  public:
   Settings(int argc, char** argv);
-  Mode getMode() const;
-  ArchiveType getArchiveType() const;
-  std::string getArchiveName() const;
-  std::vector<std::string> getRequestedBackends() const;
-  std::vector<std::string> getFiles() const;
-  bool getDirectoryArchive() const;
-  BackendRequirements getBackendRequirements() const;
-  bool getContinue();
+  [[nodiscard]] Mode getMode() const;
+  [[nodiscard]] ArchiveType getArchiveType() const;
+  [[nodiscard]] std::string getArchiveName() const;
+  [[nodiscard]] std::vector<std::string> getRequestedBackends() const;
+  [[nodiscard]] std::vector<std::string> getFiles() const;
+  [[nodiscard]] bool getDirectoryArchive() const;
+  [[nodiscard]] BackendRequirements getBackendRequirements() const;
+  [[nodiscard]] bool getContinue() const;
 
  private:
-  cxxopts::Options generateParser();
+  static cxxopts::Options generateParser();
   void parseOptions(int argc, char** argv);
-  std::string getArchiveExtension(const Settings::ArchiveType archiveType);
+  static std::string getArchiveExtension(const Settings::ArchiveType& archiveType);
   Mode parseMode(const auto& parseResult);
   ArchiveType parseArchiveType(const auto& parseResult);
   std::vector<std::string> parseFiles(const auto& parseResult, Settings::Mode mode);
@@ -57,9 +56,9 @@ class Settings {
   void initializeLogger(const auto& parseResult) const;
   BackendRequirements parseBackendRequirements(const auto& parseResult);
 
-  bool isInteractiveSession() const;
-  long long parseTimeString(const std::string& timeString);
-  long parseSizeString(const std::string& timeString);
+  [[nodiscard]] static bool isInteractiveSession();
+  [[nodiscard]] static long long parseTimeString(const std::string& timeString);
+  [[nodiscard]] static long parseSizeString(const std::string& timeString);
 };
 
 #endif

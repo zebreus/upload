@@ -40,7 +40,7 @@ std::string Uploader::uploadFile(const File& file) {
   }
 }
 
-std::string Uploader::uploadFile(const File& file, std::shared_ptr<Backend> backend) {
+std::string Uploader::uploadFile(const File& file, const std::shared_ptr<Backend>& backend) {
   if(!backend->staticFileCheck(settings.getBackendRequirements(), file)) {
     std::stringstream message;
     message << backend->getName() << " does not accept files like " << file.getName() << ".";
@@ -50,7 +50,7 @@ std::string Uploader::uploadFile(const File& file, std::shared_ptr<Backend> back
   backend->uploadFile(
       settings.getBackendRequirements(),
       file,
-      [this, &urlPromise](std::string url) {
+      [this, &urlPromise](const std::string& url) {
         try {
           urlPromise.set_value(url);
         } catch(const std::exception& e) {
@@ -60,7 +60,7 @@ std::string Uploader::uploadFile(const File& file, std::shared_ptr<Backend> back
           quit::unexpectedFailure();
         }
       },
-      [&urlPromise](std::string message) {
+      [&urlPromise](const std::string& message) {
         urlPromise.set_exception(std::make_exception_ptr(std::runtime_error(message)));
       });
 
@@ -80,7 +80,7 @@ void Uploader::initializeBackends() {
   std::vector<std::shared_ptr<Backend>> loadedBackends = loadBackends();
 
   // Find all backends with a requested name, possibly multiple with the same name, but none twice
-  if(settings.getRequestedBackends().size() > 0) {
+  if(!settings.getRequestedBackends().empty()) {
     std::vector<std::shared_ptr<Backend>> unmatchedBackends = loadedBackends;
     std::vector<std::shared_ptr<Backend>> orderedBackends;
     std::vector<std::shared_ptr<Backend>> nextBackends;
@@ -103,7 +103,7 @@ void Uploader::initializeBackends() {
     loadedBackends = orderedBackends;
   }
 
-  for(std::shared_ptr<Backend> backend : loadedBackends) {
+  for(const std::shared_ptr<Backend>& backend : loadedBackends) {
     if(backend->staticSettingsCheck(settings.getBackendRequirements())) {
       logger.log(Logger::Debug) << backend->getName() << " has all required features." << '\n';
       backends.push_back(backend);
@@ -128,7 +128,7 @@ bool Uploader::checkNextBackend() {
 }
 
 void Uploader::checkNextBackend(std::promise<std::shared_ptr<Backend>>& promise) {
-  if(backends.size() == 0) {
+  if(backends.empty()) {
     promise.set_exception(std::make_exception_ptr(std::runtime_error("There is no backend matching your requirements")));
     return;
   }
@@ -146,7 +146,7 @@ void Uploader::checkNextBackend(std::promise<std::shared_ptr<Backend>>& promise)
           quit::unexpectedFailure();
         }
       },
-      [this, &promise](std::string message) {
+      [this, &promise](const std::string& message) {
         checkNextBackend(promise);
       },
       200);

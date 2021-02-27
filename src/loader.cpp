@@ -6,7 +6,7 @@ Loader::Loader(const Settings& settings): settings(settings), threadCounter(0) {
   loadFilesFromSettings();
 }
 
-Loader::~Loader() {}
+Loader::~Loader() = default;
 
 void Loader::loadFilesFromSettings() {
   if(settings.getMode() == Settings::Mode::Archive || settings.getMode() == Settings::Mode::Individual) {
@@ -18,7 +18,6 @@ void Loader::loadFilesFromSettings() {
       }
     }
   }
-  return;
 }
 
 void Loader::loadPath(const std::filesystem::path& path) {
@@ -170,7 +169,6 @@ void Loader::startStreamThread(const std::filesystem::path& path) {
     unprocessedFilesConditionVariable.notify_one();
     logger.log(Logger::Debug) << "Stream finished" << '\n';
   });
-  return;
 }
 
 std::filesystem::file_status Loader::ensureFileStatus(const std::filesystem::path& path) {
@@ -273,9 +271,9 @@ std::filesystem::path Loader::getUnprocessedPath() {
   // Read until a real path is read
   std::unique_lock<std::mutex> lock(unprocessedFilesAccessMutex);
   unprocessedFilesConditionVariable.wait(lock, [this]() {
-    return (unprocessedFiles.size() > 0) || (threadCounter == 0);
+    return (!unprocessedFiles.empty()) || (threadCounter == 0);
   });
-  if(unprocessedFiles.size() > 0) {
+  if(!unprocessedFiles.empty()) {
     std::filesystem::path path = unprocessedFiles.front();
     unprocessedFiles.pop();
     return path;
@@ -325,34 +323,27 @@ std::shared_ptr<File> Loader::getNextFile() {
 }
 
 Loader::FileIterator Loader::begin() {
-  FileIterator begin = FileIterator();
-  begin.myLoader = this;
-  begin.file = getNextFile();
-  return begin;
+  return FileIterator(this, getNextFile());
 }
 
 Loader::FileIterator Loader::end() {
-  return FileIterator();
+  return FileIterator(this, nullptr);
 }
 
-Loader::FileIterator::FileIterator() {}
+Loader::FileIterator::FileIterator(Loader* myLoader, std::shared_ptr<File> file): myLoader(myLoader), file(std::move(file)) {}
 
 Loader::FileIterator::FileIterator(FileIterator& other) {
   myLoader = other.myLoader;
   file = other.file;
 }
 
-Loader::FileIterator::~FileIterator() {}
+Loader::FileIterator::~FileIterator() = default;
 
 bool Loader::FileIterator::operator==(const Loader::FileIterator& other) {
-  if(file == nullptr) {
-    if(other.file == nullptr) {
-      return true;
-    } else {
-      return false;
-    }
+  if(file == other.file) {
+    return true;
   }
-  if(other.file == nullptr) {
+  if(file == nullptr || other.file == nullptr) {
     return false;
   }
   return file->getName() == other.file->getName();
@@ -368,13 +359,6 @@ File& Loader::FileIterator::operator*() {
 
 File* Loader::FileIterator::operator->() {
   return file.get();
-}
-
-Loader::FileIterator Loader::FileIterator::operator++(int) {
-  if(file != nullptr) {
-    file = myLoader->getNextFile();
-  }
-  return *this;
 }
 
 Loader::FileIterator& Loader::FileIterator::operator++() {

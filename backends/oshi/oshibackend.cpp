@@ -37,12 +37,12 @@ void OshiBackend::uploadFile(BackendRequirements requirements,
   }
 }
 
-std::shared_ptr<httplib::MultipartFormDataItems> OshiBackend::generateFormData(BackendRequirements requirements, const File& file) {
+std::shared_ptr<httplib::MultipartFormDataItems> OshiBackend::generateFormData(const BackendRequirements& requirements, const File& file) {
   std::shared_ptr<httplib::MultipartFormDataItems> formData(new httplib::MultipartFormDataItems());
-  formData->push_back(httplib::MultipartFormData("f", file.getContent(), file.getName(), file.getMimetype()));
+  formData->push_back({"f", file.getContent(), file.getName(), file.getMimetype()});
 
   long long retentionPeriod = determineRetention(requirements);
-  int retentionMinutes = retentionPeriod / (60 * 1000);
+  int retentionMinutes = static_cast<int>(retentionPeriod / (60ll * 1000ll));
   formData->push_back({"expire", std::to_string(retentionMinutes)});
 
   if(requirements.maxDownloads != nullptr && *requirements.maxDownloads != 0) {

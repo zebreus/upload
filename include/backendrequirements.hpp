@@ -47,6 +47,6 @@ struct BackendCapabilities {
   bool meetsRequirements(BackendRequirements requirements) const;
   // Helper to determine wheter to preserve the filename for the given requirements.
   // If the requirements are not compatible with the capabilities, the result is random
-  bool determinePreserveName(BackendRequirements requirements) const;
+  bool determinePreserveName(const BackendRequirements& requirements) const;
 };
 #endif

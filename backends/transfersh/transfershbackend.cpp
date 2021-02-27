@@ -21,18 +21,18 @@ void TransferShBackend::uploadFile(BackendRequirements requirements,
                                    std::function<void(std::string)> errorCallback) {
   httplib::Headers headers;
   long long retentionPeriod = determineRetention(requirements);
-  int retentionDays = retentionPeriod / (24ll * 60 * 60 * 1000);
+  int retentionDays = static_cast<int>(retentionPeriod / (24ll * 60 * 60 * 1000));
   headers.insert({"Max-Days", std::to_string(retentionDays)});
 
   if(requirements.maxDownloads != nullptr) {
-    int maxDownloads = determineMaxDownloads(requirements);
+    long maxDownloads = determineMaxDownloads(requirements);
     headers.insert({"Max-Downloads", std::to_string(maxDownloads)});
   }
 
   try {
     std::string response = putFile(file, headers);
     std::vector<std::string> urls = findValidUrls(response);
-    if(urls.size() >= 1) {
+    if(!urls.empty()) {
       std::string resultUrl = urls.front();
       size_t afterHost = resultUrl.find(url) + url.size() + 1;
       try {

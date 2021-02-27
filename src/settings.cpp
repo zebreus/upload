@@ -34,7 +34,7 @@ BackendRequirements Settings::getBackendRequirements() const {
   return requirements;
 }
 
-bool Settings::getContinue() {
+bool Settings::getContinue() const {
   return continueUploading;
 }
 
@@ -108,7 +108,7 @@ void Settings::parseOptions(int argc, char** argv) {
   }
 }
 
-std::string Settings::getArchiveExtension(Settings::ArchiveType archiveType) {
+std::string Settings::getArchiveExtension(const Settings::ArchiveType& archiveType) {
   switch(archiveType) {
     case ArchiveType::Zip:
     default:
@@ -143,9 +143,9 @@ Settings::Mode Settings::parseMode(const auto& parseResult) {
 
 Settings::ArchiveType Settings::parseArchiveType(const auto& parseResult) {
   if(parseResult.count("archive-type")) {
-    std::string archiveType = parseResult["archive-type"].template as<std::string>();
+    std::string archiveTypeString = parseResult["archive-type"].template as<std::string>();
 
-    if(archiveType == "zip") {
+    if(archiveTypeString == "zip") {
       return ArchiveType::Zip;
     } else {
       logger.log(Logger::Fatal) << "You specified an invalid archive-type. The only possible value is 'zip'" << '\n';
@@ -204,7 +204,7 @@ std::string Settings::parseArchiveName(const auto& parseResult, Settings::Archiv
   if(parseResult.count("name")) {
     std::string name = parseResult["name"].template as<std::string>();
     // TODO better check for valid names
-    if(name == "") {
+    if(name.empty()) {
       logger.log(Logger::Fatal) << "You set an invalid archive name " << name
                                 << " . At the moment I cannot make any recommendations for improvement." << '\n';
       quit::invalidCliUsage();
@@ -216,7 +216,7 @@ std::string Settings::parseArchiveName(const auto& parseResult, Settings::Archiv
 
   unsigned int nameLength = 8;
   name.reserve(nameLength + 1);
-  srand(time(NULL));
+  srand(time(nullptr));
   for(unsigned int x = 0; x < nameLength; x++) {
     name.push_back(65 + (rand() % 2) * 32 + (rand() % 26));
   }
@@ -408,13 +408,13 @@ long Settings::parseSizeString(const std::string& sizeString) {
   }
   std::string numberString = sizeString.substr(0, suffixStart);
   std::string suffixString = sizeString.substr(suffixStart);
-  for(int i = 0; i < suffixString.size(); i++) {
-    suffixString[i] = std::tolower(suffixString[i]);
+  for(char& i : suffixString) {
+    i = std::tolower(i);
   }
   try {
     long number = std::stol(numberString);
     int multiplier = 1;
-    if(suffixString.size() == 0) {
+    if(suffixString.empty()) {
       multiplier = 1;
     } else if(suffixString.size() == 2 && suffixString[1] == 'b') {
       multiplier = 1000;
@@ -462,11 +462,11 @@ long Settings::parseSizeString(const std::string& sizeString) {
 }
 
 #ifdef __unix__
-bool Settings::isInteractiveSession() const {
+bool Settings::isInteractiveSession() {
   return isatty(fileno(stdin));
 }
 #elif defined(__windows__)
-bool Settings::isInteractiveSession() const {
+bool Settings::isInteractiveSession() {
   return _isatty(_fileno(stdin));
 }
 #else

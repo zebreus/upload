@@ -11,7 +11,7 @@
 
 class TransferShBackend: public HttplibBackend {
  public:
-  TransferShBackend(bool useSSL, const std::string& url = "transfer.sh", const std::string& name = "transfer.sh");
+  explicit TransferShBackend(bool useSSL, const std::string& url = "transfer.sh", const std::string& name = "transfer.sh");
   void uploadFile(BackendRequirements requiredFeatures,
                   const File& file,
                   std::function<void(std::string)> successCallback,

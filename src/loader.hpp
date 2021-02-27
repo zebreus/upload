@@ -33,14 +33,13 @@ class Loader {
     using pointer = File*;
     using reference = File&;
 
-    FileIterator();
+    FileIterator(Loader* myLoader, std::shared_ptr<File> file);
     FileIterator(FileIterator& other);
     ~FileIterator();
     bool operator==(const FileIterator& other);
     bool operator!=(const FileIterator& other);
     File& operator*();
     File* operator->();
-    FileIterator operator++(int);
     FileIterator& operator++();
 
     Loader* myLoader;
@@ -59,7 +58,7 @@ class Loader {
   Settings settings;
 
  public:
-  Loader(const Settings& settings);
+  explicit Loader(const Settings& settings);
   ~Loader();
   std::shared_ptr<File> getNextFile();
 
@@ -82,16 +81,16 @@ class Loader {
   void startStreamThread(const std::filesystem::path& path);
 
   // Ensure that a path exists and information about it can be optained
-  std::filesystem::file_status ensureFileStatus(const std::filesystem::path& path);
+  static std::filesystem::file_status ensureFileStatus(const std::filesystem::path& path);
 
   // Ensure that a file has read permissions
-  bool isReadable(const std::filesystem::path& status);
+  static bool isReadable(const std::filesystem::path& status);
 
   // Wait until the next path is available and return it.
   // Throws std::runtime_error, when all paths have been read
   std::filesystem::path getUnprocessedPath();
 
-  std::shared_ptr<File> createArchive(const std::vector<std::filesystem::path>& files, const std::string& name, bool directoryCreation);
+  static std::shared_ptr<File> createArchive(const std::vector<std::filesystem::path>& files, const std::string& name, bool directoryCreation);
 };
 
 #endif

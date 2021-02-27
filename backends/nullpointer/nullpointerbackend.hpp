@@ -12,8 +12,8 @@
 
 class NullPointerBackend: public HttplibBackend {
  public:
-  NullPointerBackend(bool useSSL, const std::string& url = "0x0.st", const std::string& name = "THE NULL POINTER");
-  bool staticFileCheck(BackendRequirements requirements, const File& file) const override;
+  explicit NullPointerBackend(bool useSSL, const std::string& url = "0x0.st", const std::string& name = "THE NULL POINTER");
+  [[nodiscard]] bool staticFileCheck(BackendRequirements requirements, const File& file) const override;
   void uploadFile(BackendRequirements requiredFeatures,
                   const File& file,
                   std::function<void(std::string)> successCallback,
@@ -21,7 +21,7 @@ class NullPointerBackend: public HttplibBackend {
   static std::vector<Backend*> loadBackends();
 
  private:
-  long long calculateRetentionPeriod(const File& f) const;
+  [[nodiscard]] long long calculateRetentionPeriod(const File& f) const;
 };
 
 #endif

@@ -10,11 +10,11 @@ class File {
   std::string content;
 
  public:
-  File(const std::filesystem::path& path);
-  File(const std::string& name, const std::string& content);
-  std::string getName() const;
-  std::string getContent() const;
-  std::string getMimetype() const;
+  explicit File(const std::filesystem::path& path);
+  File(std::string name, std::string content);
+  [[nodiscard]] std::string getName() const;
+  [[nodiscard]] std::string getContent() const;
+  [[nodiscard]] std::string getMimetype() const;
 };
 
 #endif
