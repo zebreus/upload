@@ -1,4 +1,6 @@
 BUILD_DIR := build
+DYNAMIC_BUILD_DIR := build-dynamic
+STATIC_BUILD_DIR := build-static
 LIB_DIR := libs
 SRC_DIR := src
 
@@ -16,9 +18,9 @@ CXX=g++
 MKDIR=mkdir -p
 MAKEOVERRIDES += CXX:=$(CXX)
 
-export COMMON_CXX_FLAGS := -std=c++2a -O3
+COMMON_CXX_FLAGS := -std=c++2a -Os -DUPLOAD_PLUGIN_DIR=$(INSTALL_PLUGIN_DIR) -DCPPHTTPLIB_OPENSSL_SUPPORT
 #$(GCC_WARNING_FLAGS)
-export COMMON_LD_FLAGS := -O3 -Wl,-as-needed -Wl,-z,relro,-z,now 
+export COMMON_LD_FLAGS := -Os -Wl,-as-needed -Wl,-z,relro,-z,now 
 
 BACKENDS_DIR = backends
 BACKENDS_BUILD_DIR = ../../$(BUILD_DIR)
@@ -28,48 +30,60 @@ SHARED_BACKEND_LIBS = $(BACKENDS:%=$(BUILD_DIR)/lib%.so)
 
 # TODO improve this
 # If set to yeah, the targets are build as shared libraries
-DYNAMIC := yeah
+DYNAMIC := nay
 
 UPLOAD := upload
 INCLUDE_FLAGS += -Iinclude
 INCLUDE_FLAGS += -isystem $(LIB_DIR)/cxxopts/include
 INCLUDE_FLAGS += -isystem $(LIB_DIR)/miniz-cpp
 INCLUDE_FLAGS += -I$(SRC_DIR)
-CXX_FLAGS := $(COMMON_CXX_FLAGS) $(INCLUDE_FLAGS) -MMD -MP -pthread -DUPLOAD_PLUGIN_DIR=$(INSTALL_PLUGIN_DIR)
-LD_FLAGS := $(COMMON_LD_FLAGS) -pthread
+STATIC_INCLUDE_FLAGS += $(INCLUDE_FLAGS)
+STATIC_INCLUDE_FLAGS += -isystem $(LIB_DIR)/cpp-httplib
+STATIC_INCLUDE_FLAGS += $(BACKENDS:%=-I$(BACKENDS_DIR)/%)
+
+STATIC_CXX_FLAGS := $(COMMON_CXX_FLAGS) -s -MMD -MP -isystem $(LIB_DIR)/cpp-httplib $(STATIC_INCLUDE_FLAGS) -DSTATIC_LOADER
+CXX_FLAGS := $(STATIC_CXX_FLAGS)
+DYNAMIC_CXX_FLAGS := $(COMMON_CXX_FLAGS) -MMD -MP $(INCLUDE_FLAGS)
+
+LD_FLAGS := $(COMMON_LD_FLAGS) -s -lssl -lcrypto -pthread -lpthread
+STATIC_LD_FLAGS := $(COMMON_LD_FLAGS) -s -static -lrt -lssl -lcrypto -pthread -lpthread
+DYNAMIC_LD_FLAGS := $(COMMON_LD_FLAGS) -pthread -ldl -rdynamic
+
 SRCS := $(wildcard $(SRC_DIR)/*.cpp)
 OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
+STATIC_OBJS := $(SRCS:%=$(STATIC_BUILD_DIR)/%.o)
+DYNAMIC_OBJS := $(SRCS:%=$(DYNAMIC_BUILD_DIR)/%.o)
 
 DEPS := $(OBJS:.o=.d)
 
 all: $(BUILD_DIR)/$(UPLOAD)
-
-
-ifeq ($(DYNAMIC),yeah)
-
-# dynamic loading
-LD_FLAGS += -ldl -rdynamic
-
-$(BUILD_DIR)/$(UPLOAD): $(OBJS) $(SHARED_BACKEND_LIBS)
-	$(CXX) $(OBJS) -o $@ $(LD_FLAGS)
-
-else
-
-# static linking
-CXX_FLAGS += -isystem $(LIB_DIR)/cpp-httplib
-LD_FLAGS += $(STATIC_BACKEND_LIBS) -pthread -lcrypto -lssl
-CXX_FLAGS += $(BACKENDS:%=-I$(BACKENDS_DIR)/%)
-CXX_FLAGS += -DSTATIC_LOADER -DCPPHTTPLIB_OPENSSL_SUPPORT
+static: $(BUILD_DIR)/$(UPLOAD)
+dynamic: $(BUILD_DIR)/$(UPLOAD)
 
 $(BUILD_DIR)/$(UPLOAD): $(OBJS) $(STATIC_BACKEND_LIBS)
-	$(CXX) $(OBJS) -o $@ $(LD_FLAGS)
+	$(MKDIR) $(dir $@)
+	$(CXX) $(OBJS) -o $@ $(STATIC_BACKEND_LIBS) $(LD_FLAGS)
 
-endif
+$(STATIC_BUILD_DIR)/$(UPLOAD): $(STATIC_OBJS) $(STATIC_BACKEND_LIBS)
+	$(MKDIR) $(dir $@)
+	$(CXX) $(STATIC_OBJS) -o $@ $(STATIC_BACKEND_LIBS) $(STATIC_LD_FLAGS)
+
+$(DYNAMIC_BUILD_DIR)/$(UPLOAD): $(DYNAMIC_OBJS) $(SHARED_BACKEND_LIBS)
+	$(MKDIR) $(dir $@)
+	$(CXX) $(DYNAMIC_OBJS) -o $@ $(DYNAMIC_LD_FLAGS)
 
 # c++ source
 $(BUILD_DIR)/%.cpp.o: %.cpp
 	$(MKDIR) $(dir $@)
 	$(CXX) $(CXX_FLAGS) -c $< -o $@
+
+$(STATIC_BUILD_DIR)/%.cpp.o: %.cpp
+	$(MKDIR) $(dir $@)
+	$(CXX) $(STATIC_CXX_FLAGS) -c $< -o $@
+
+$(DYNAMIC_BUILD_DIR)/%.cpp.o: %.cpp
+	$(MKDIR) $(dir $@)
+	$(CXX) $(DYNAMIC_CXX_FLAGS) -c $< -o $@
 
 $(STATIC_BACKEND_LIBS): $(BUILD_DIR)/lib%.a :
 	$(MAKE) -C $(BACKENDS_DIR)/$* $(BACKENDS_BUILD_DIR)/lib$*.a
