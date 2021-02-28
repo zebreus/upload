@@ -99,7 +99,7 @@ int main(int argc, char* argv[]) {
   }
   outfile << "#ifndef " << macro << '\n';
   outfile << "#define " << macro << '\n';
-  outfile << "inline constexpr std::string " << name << " = " << '\n';
+  outfile << "inline constexpr char " << name << "[] = " << '\n';
 
   auto printMap = getStringPrintMap();
   int count = 0;

@@ -111,6 +111,48 @@ inline bool HttplibBackend::checkFile(const File& file) const {
   return true;
 }
 
+#ifdef INTEGRATED_CERTIFICATES
+#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+#include <openssl/x509.h>
+#include <openssl/x509v3.h>
+#include <openssl/bio.h>
+#include <cacert.hpp>
+
+inline void loadIntegratedCerts(SSL_CTX* ctx){
+  BIO *cbio = BIO_new_mem_buf(cacertpem, sizeof(cacertpem));
+  X509_STORE  *cts = SSL_CTX_get_cert_store(ctx);
+  if(!cts || !cbio) {
+    logger.log(Logger::Debug) << "Loading integrated certificates failed.";
+    return;
+  }
+  X509_INFO *itmp;
+  int i, count = 0, type = X509_FILETYPE_PEM;
+  STACK_OF(X509_INFO) *inf = PEM_X509_INFO_read_bio(cbio, NULL, NULL, NULL);
+
+  if (!inf)
+  {
+    BIO_free(cbio);//cleanup
+    logger.log(Logger::Debug) << "Loading integrated certificates failed.";
+    return;
+  }
+  //iterate over all entries from the pem file, add them to the x509_store one by one
+  for (i = 0; i < sk_X509_INFO_num(inf); i++) {
+    itmp = sk_X509_INFO_value(inf, i);
+    if (itmp->x509) {
+      X509_STORE_add_cert(cts, itmp->x509);
+      count++;
+    }
+    if (itmp->crl) {
+      X509_STORE_add_crl(cts, itmp->crl);
+      count++;
+    }
+  }
+  sk_X509_INFO_pop_free(inf, X509_INFO_free); //cleanup
+  BIO_free(cbio);//cleanup
+}
+#endif
+#endif
+
 inline void HttplibBackend::initializeClient() {
   if(client == nullptr) {
     std::string httpUrl;
@@ -128,7 +170,15 @@ inline void HttplibBackend::initializeClient() {
     httpUrl.append(url);
 
     client = new httplib::Client(httpUrl.c_str());
-
+#ifdef INTEGRATED_CERTIFICATES
+#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+    if(useSSL){
+      loadIntegratedCerts(client->ssl_context());
+    }
+#else
+#error "You have activated integrated certificates, did not activate openssl support. Maybe try defining CPPHTTPLIB_OPENSSL_SUPPORT."
+#endif
+#endif
     httplib::Headers headers = {{"Accept", "*/*"}, {"User-Agent", userAgent}};
     client->set_default_headers(headers);
   }
