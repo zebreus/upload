@@ -30,6 +30,7 @@ class Settings {
   bool directoryArchive;
   BackendRequirements requirements;
   bool continueUploading;
+  bool continueLoading;
 
   static constexpr ArchiveType defaultArchiveType = ArchiveType::Zip;
 
@@ -42,7 +43,8 @@ class Settings {
   [[nodiscard]] std::vector<std::string> getFiles() const;
   [[nodiscard]] bool getDirectoryArchive() const;
   [[nodiscard]] BackendRequirements getBackendRequirements() const;
-  [[nodiscard]] bool getContinue() const;
+  [[nodiscard]] bool getContinueLoading() const;
+  [[nodiscard]] bool getContinueUploading() const;
 
  private:
   static cxxopts::Options generateParser();
@@ -54,6 +56,7 @@ class Settings {
   bool parseDirectoryArchive(const auto& parseResult, Settings::Mode mode);
   std::string parseArchiveName(const auto& parseResult, Settings::ArchiveType type);
   void initializeLogger(const auto& parseResult) const;
+  void parseContinue(const auto& parseResult);
   BackendRequirements parseBackendRequirements(const auto& parseResult);
 
   [[nodiscard]] static bool isInteractiveSession();

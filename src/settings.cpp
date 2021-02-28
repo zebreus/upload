@@ -34,7 +34,10 @@ BackendRequirements Settings::getBackendRequirements() const {
   return requirements;
 }
 
-bool Settings::getContinue() const {
+bool Settings::getContinueLoading() const {
+  return continueUploading;
+}
+bool Settings::getContinueUploading() const {
   return continueUploading;
 }
 
@@ -68,9 +71,11 @@ cxxopts::Options Settings::generateParser() {
   ("archive-type", "Sets the archive type", cxxopts::value<std::string>()->default_value("1"), "TYPE")
   ("r,root-archive", "Put the contents of directories in the root of the archive.")
   ("d,directory-archive", "Put the contents of directories in a directory in the archive.")
+  ("c,continue", "Do not fail if opening or uploading a file failed.")
+  ("continue-file", "Do not fail if opening a file failed.")
+  ("continue-upload", "Do not fail if uploading a file failed.")
   ;
   options.add_options("Individual mode")
-  ("c,continue", "Do not abort if the upload of a file failed.")
   ;
   options.add_options("Archive mode")
   ("n,name", "The name of the created archive in archive mode.", cxxopts::value<std::string>())
@@ -101,7 +106,7 @@ void Settings::parseOptions(int argc, char** argv) {
     archiveName = parseArchiveName(result, archiveType);
     directoryArchive = parseDirectoryArchive(result, mode);
     requirements = parseBackendRequirements(result);
-    continueUploading = result.count("continue");
+    parseContinue(result);
   } catch(const cxxopts::OptionException& e) {
     logger.log(Logger::Fatal) << e.what() << '\n';
     quit::invalidCliUsage();
@@ -250,6 +255,26 @@ void Settings::initializeLogger(const auto& parseResult) const {
       logger.setTopicState(Logger::Topic::Debug, true);
       logger.setTopicState(Logger::Topic::Url, true);
       break;
+  }
+}
+
+void Settings::parseContinue(const auto& parseResult) {
+  continueLoading = false;
+  continueUploading = false;
+
+  if(parseResult.count("continue")){
+    continueLoading = true;
+    continueUploading = true;
+  }
+  if(parseResult.count("continue-file")){
+    continueLoading = true;
+  }
+  if(parseResult.count("continue-upload")){
+    continueUploading = true;
+  }
+
+  if(parseResult.count("continue-file") && parseResult.count("continue-upload")){
+    logger.log(Logger::Info) << "You set '--continue-file' and '--continue-upload'. You can achieve the same effect, by just setting '--continue'." << '\n';
   }
 }
 

@@ -32,7 +32,7 @@ std::string Uploader::uploadFile(const File& file) {
 
   std::stringstream message;
   message << "Failed to upload " << file.getName() << " to any backend.";
-  if(settings.getContinue()) {
+  if(settings.getContinueUploading()) {
     throw std::runtime_error(message.str());
   } else {
     logger.log(Logger::Fatal) << message.str() << '\n';
