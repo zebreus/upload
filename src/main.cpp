@@ -19,6 +19,7 @@ int main(int argc, char** argv) {
       logger.log(Logger::Info) << error.what() << '\n';
     }
   }
-
-  return 0;
+  
+  //Exit, because there is no need to wait for other threads anymore.
+  quit::success();
 }
