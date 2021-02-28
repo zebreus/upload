@@ -234,26 +234,26 @@ std::string Settings::parseArchiveName(const auto& parseResult, Settings::Archiv
 void Settings::initializeLogger(const auto& parseResult) const {
   switch(parseResult.count("v")) {
     case 0:
-      logger.setTopicState(Logger::Topic::Fatal, true);
-      logger.setTopicState(Logger::Topic::Print, true);
-      logger.setTopicState(Logger::Topic::Info, false);
-      logger.setTopicState(Logger::Topic::Debug, false);
-      logger.setTopicState(Logger::Topic::Url, true);
+      logger.setTopicStream(Logger::Topic::Fatal, &std::clog);
+      logger.setTopicStream(Logger::Topic::Print, &std::cout);
+      logger.setTopicStream(Logger::Topic::Info, nullptr);
+      logger.setTopicStream(Logger::Topic::Debug, nullptr);
+      logger.setTopicStream(Logger::Topic::Url, &std::cout);
       break;
     case 1:
-      logger.setTopicState(Logger::Topic::Fatal, true);
-      logger.setTopicState(Logger::Topic::Print, true);
-      logger.setTopicState(Logger::Topic::Info, true);
-      logger.setTopicState(Logger::Topic::Debug, false);
-      logger.setTopicState(Logger::Topic::Url, true);
+      logger.setTopicStream(Logger::Topic::Fatal, &std::clog);
+      logger.setTopicStream(Logger::Topic::Print, &std::cout);
+      logger.setTopicStream(Logger::Topic::Info, &std::clog);
+      logger.setTopicStream(Logger::Topic::Debug, nullptr);
+      logger.setTopicStream(Logger::Topic::Url, &std::cout);
       break;
     case 2:
     default:
-      logger.setTopicState(Logger::Topic::Fatal, true);
-      logger.setTopicState(Logger::Topic::Print, true);
-      logger.setTopicState(Logger::Topic::Info, true);
-      logger.setTopicState(Logger::Topic::Debug, true);
-      logger.setTopicState(Logger::Topic::Url, true);
+      logger.setTopicStream(Logger::Topic::Fatal, &std::clog);
+      logger.setTopicStream(Logger::Topic::Print, &std::cout);
+      logger.setTopicStream(Logger::Topic::Info, &std::clog);
+      logger.setTopicStream(Logger::Topic::Debug, &std::clog);
+      logger.setTopicStream(Logger::Topic::Url, &std::cout);
       break;
   }
 }
@@ -261,16 +261,22 @@ void Settings::initializeLogger(const auto& parseResult) const {
 void Settings::parseContinue(const auto& parseResult) {
   continueLoading = false;
   continueUploading = false;
+  logger.setTopicStream(Logger::LoadFatal, Logger::Fatal);
+  logger.setTopicStream(Logger::UploadFatal, Logger::Fatal);
 
   if(parseResult.count("continue")){
     continueLoading = true;
     continueUploading = true;
+    logger.setTopicStream(Logger::LoadFatal, Logger::Info);
+    logger.setTopicStream(Logger::UploadFatal, Logger::Info);
   }
   if(parseResult.count("continue-file")){
     continueLoading = true;
+    logger.setTopicStream(Logger::LoadFatal, Logger::Info);
   }
   if(parseResult.count("continue-upload")){
     continueUploading = true;
+    logger.setTopicStream(Logger::UploadFatal, Logger::Info);
   }
 
   if(parseResult.count("continue-file") && parseResult.count("continue-upload")){

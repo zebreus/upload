@@ -3,19 +3,30 @@
 Logger logger;
 
 Logger::Logger() {
-  topicState[Topic::Fatal] = true;
-  topicState[Topic::Print] = true;
-  topicState[Topic::Url] = true;
-  topicState[Topic::Info] = false;
-  topicState[Topic::Debug] = false;
+  nullstream = new std::ofstream();
+  nullstream->setstate(std::ios_base::badbit);
+
+  topicStream[Topic::Fatal] = &std::cout;
+  topicStream[Topic::Print] = &std::cout;
+  topicStream[Topic::Url] = &std::cout;
+  topicStream[Topic::Info] = nullptr;
+  topicStream[Topic::Debug] = nullptr;
+}
+
+Logger::~Logger() {
+  delete nullstream;
 }
 
 bool Logger::getTopicState(Topic topic) {
-  return topicState[topic];
+  return (topicStream[topic] != nullptr && topicStream[topic] != nullstream);
 }
 
-void Logger::setTopicState(Topic topic, bool state) {
-  topicState[topic] = state;
+void Logger::setTopicStream(Topic topic, std::ostream* stream) {
+  topicStream[topic] = stream;
+}
+
+void Logger::setTopicStream(Logger::Topic topic, Logger::Topic stream) {
+  topicStream[topic] = topicStream[stream];
 }
 
 void Logger::log(Topic topic, const std::string& message) {
@@ -23,31 +34,10 @@ void Logger::log(Topic topic, const std::string& message) {
 }
 
 std::ostream& Logger::log(Topic topic) {
-  static std::ofstream nullstream;
-  static bool markedBad = false;
-  if(!markedBad) {
-    nullstream.setstate(std::ios_base::badbit);
-    markedBad = true;
+  if(topicStream[topic] == nullptr){
+    return *nullstream;
   }
-
-  if(getTopicState(topic)) {
-    switch(topic) {
-      case Topic::Fatal:
-        return std::clog;
-      case Topic::Print:
-        return std::cout;
-      case Topic::Debug:
-        return std::clog;
-      case Topic::Info:
-        return std::clog;
-      case Topic::Url:
-        return std::cout;
-      default:
-        return nullstream;
-    }
-  } else {
-    return nullstream;
-  }
+  return *topicStream[topic];
 }
 
 std::ostream& Logger::debug() {

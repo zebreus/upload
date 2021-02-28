@@ -14,15 +14,21 @@ class Logger {
   // Info = additional output
   // Debug = debug message
   // Url = result url
-  enum Topic { Fatal, Print, Info, Debug, Url };
+  // LoadFatal = file loading failed, program might exit
+  // UploadFatal = file uploading failed, program might exit
+  enum Topic { Fatal, Print, Info, Debug, Url, LoadFatal, UploadFatal };
 
  private:
-  std::map<Topic, bool> topicState;
+  std::map<Topic, std::ostream*> topicStream;
+  std::ostream* nullstream;
 
  public:
   Logger();
+  Logger(Logger&) = delete;
+  ~Logger();
   bool getTopicState(Topic topic);
-  void setTopicState(Topic topic, bool state);
+  void setTopicStream(Topic topic, std::ostream* stream);
+  void setTopicStream(Topic topic, Topic stream);
   void log(Topic topic, const std::string& message);
   std::ostream& log(Topic topic);
   std::ostream& debug();
