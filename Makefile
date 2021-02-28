@@ -60,8 +60,8 @@ DYNAMIC_OBJS := $(SRCS:%=$(DYNAMIC_BUILD_DIR)/%.o)
 DEPS := $(OBJS:.o=.d)
 
 all: $(BUILD_DIR)/$(UPLOAD)
-static: $(BUILD_DIR)/$(UPLOAD)
-dynamic: $(BUILD_DIR)/$(UPLOAD)
+static: $(STATIC_BUILD_DIR)/$(UPLOAD)
+dynamic: $(DYNAMIC_BUILD_DIR)/$(UPLOAD)
 
 $(BUILD_DIR)/$(UPLOAD): $(OBJS) $(STATIC_BACKEND_LIBS)
 	$(MKDIR) $(dir $@)
