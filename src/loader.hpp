@@ -37,7 +37,6 @@ class Loader {
     FileIterator(FileIterator& other);
     ~FileIterator();
     bool operator==(const FileIterator& other);
-    bool operator!=(const FileIterator& other);
     File& operator*();
     File* operator->();
     FileIterator& operator++();

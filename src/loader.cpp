@@ -349,10 +349,6 @@ bool Loader::FileIterator::operator==(const Loader::FileIterator& other) {
   return file->getName() == other.file->getName();
 }
 
-bool Loader::FileIterator::operator!=(const Loader::FileIterator& other) {
-  return !operator==(other);
-}
-
 File& Loader::FileIterator::operator*() {
   return *file;
 }
