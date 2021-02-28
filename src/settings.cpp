@@ -264,23 +264,24 @@ void Settings::parseContinue(const auto& parseResult) {
   logger.setTopicStream(Logger::LoadFatal, Logger::Fatal);
   logger.setTopicStream(Logger::UploadFatal, Logger::Fatal);
 
-  if(parseResult.count("continue")){
+  if(parseResult.count("continue")) {
     continueLoading = true;
     continueUploading = true;
     logger.setTopicStream(Logger::LoadFatal, Logger::Info);
     logger.setTopicStream(Logger::UploadFatal, Logger::Info);
   }
-  if(parseResult.count("continue-file")){
+  if(parseResult.count("continue-file")) {
     continueLoading = true;
     logger.setTopicStream(Logger::LoadFatal, Logger::Info);
   }
-  if(parseResult.count("continue-upload")){
+  if(parseResult.count("continue-upload")) {
     continueUploading = true;
     logger.setTopicStream(Logger::UploadFatal, Logger::Info);
   }
 
-  if(parseResult.count("continue-file") && parseResult.count("continue-upload")){
-    logger.log(Logger::Info) << "You set '--continue-file' and '--continue-upload'. You can achieve the same effect, by just setting '--continue'." << '\n';
+  if(parseResult.count("continue-file") && parseResult.count("continue-upload")) {
+    logger.log(Logger::Info)
+        << "You set '--continue-file' and '--continue-upload'. You can achieve the same effect, by just setting '--continue'." << '\n';
   }
 }
 

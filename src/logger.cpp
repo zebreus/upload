@@ -34,7 +34,7 @@ void Logger::log(Topic topic, const std::string& message) {
 }
 
 std::ostream& Logger::log(Topic topic) {
-  if(topicStream[topic] == nullptr){
+  if(topicStream[topic] == nullptr) {
     return *nullstream;
   }
   return *topicStream[topic];
