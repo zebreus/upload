@@ -37,8 +37,13 @@ BackendRequirements Settings::getBackendRequirements() const {
 bool Settings::getContinueLoading() const {
   return continueLoading;
 }
+
 bool Settings::getContinueUploading() const {
   return continueUploading;
+}
+
+bool Settings::getCheckWhenNeeded() const {
+  return checkWhenNeeded;
 }
 
 cxxopts::Options Settings::generateParser() {
@@ -74,6 +79,7 @@ cxxopts::Options Settings::generateParser() {
   ("c,continue", "Do not fail if opening or uploading a file failed.")
   ("continue-file", "Do not fail if opening a file failed.")
   ("continue-upload", "Do not fail if uploading a file failed.")
+  ("check-when-needed", "Only check backends, if no other backends are available.")
   ;
   options.add_options("Individual mode")
   ;
@@ -107,6 +113,7 @@ void Settings::parseOptions(int argc, char** argv) {
     directoryArchive = parseDirectoryArchive(result, mode);
     requirements = parseBackendRequirements(result);
     parseContinue(result);
+    checkWhenNeeded = result.count("check-when-needed");
   } catch(const cxxopts::OptionException& e) {
     logger.log(Logger::Fatal) << e.what() << '\n';
     quit::invalidCliUsage();

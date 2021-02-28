@@ -31,6 +31,7 @@ class Settings {
   BackendRequirements requirements;
   bool continueUploading;
   bool continueLoading;
+  bool checkWhenNeeded;
 
   static constexpr ArchiveType defaultArchiveType = ArchiveType::Zip;
 
@@ -45,6 +46,7 @@ class Settings {
   [[nodiscard]] BackendRequirements getBackendRequirements() const;
   [[nodiscard]] bool getContinueLoading() const;
   [[nodiscard]] bool getContinueUploading() const;
+  [[nodiscard]] bool getCheckWhenNeeded() const;
 
  private:
   static cxxopts::Options generateParser();
