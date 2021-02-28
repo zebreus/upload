@@ -9,7 +9,21 @@ Uploader::Uploader(const Settings& settings): settings(settings) {
 }
 
 std::string Uploader::uploadFile(const File& file) {
-  for(const std::shared_ptr<Backend>& backend : checkedBackends) {
+  //This loop does not need to lock the mutex
+  while(checkedBackends.empty() && !backends.empty()) {
+    backends.front().get();
+    backends.pop();
+  }
+
+  size_t pos;
+  //This loop does not need to lock the mutex here
+  for(pos = 0;pos < checkedBackends.size() ;pos++) {
+
+    std::shared_ptr<Backend> backend;
+    {
+      std::unique_lock<std::mutex> lock(checkedBackendsMutex);
+      backend = checkedBackends[pos];
+    }
     try {
       return uploadFile(file, backend);
     } catch(const std::runtime_error& e) {
@@ -17,16 +31,11 @@ std::string Uploader::uploadFile(const File& file) {
     } catch(...) {
       logger.log(Logger::Info) << "Unexpected error while uploading " << file.getName() << " to " << backend->getName() << "." << '\n';
     }
-  }
 
-  while(checkNextBackend()) {
-    std::shared_ptr<Backend> backend = checkedBackends.back();
-    try {
-      return uploadFile(file, backend);
-    } catch(const std::runtime_error& e) {
-      logger.log(Logger::Info) << "Failed to upload " << file.getName() << " to " << backend->getName() << ". " << e.what() << '\n';
-    } catch(...) {
-      logger.log(Logger::Info) << "Unexpected error while uploading " << file.getName() << " to " << backend->getName() << "." << '\n';
+    //This loop does not need to lock the mutex
+    while(pos == checkedBackends.size()-1 && !backends.empty()) {
+      backends.front().get();
+      backends.pop();
     }
   }
 
@@ -68,10 +77,12 @@ std::string Uploader::uploadFile(const File& file, const std::shared_ptr<Backend
 }
 
 void Uploader::printAvailableBackends() {
-  for(const std::shared_ptr<Backend>& backend : checkedBackends) {
-    logger.log(Logger::Print) << backend->getName() << '\n';
+  while(!backends.empty()) {
+    backends.front().get();
+    backends.pop();
   }
-  for(const std::shared_ptr<Backend>& backend : backends) {
+  std::unique_lock<std::mutex> lock(checkedBackendsMutex);
+  for(const std::shared_ptr<Backend>& backend : checkedBackends) {
     logger.log(Logger::Print) << backend->getName() << '\n';
   }
 }
@@ -104,53 +115,32 @@ void Uploader::initializeBackends() {
     loadedBackends = orderedBackends;
   }
 
+  std::launch launchPolicy;
+  if(settings.getCheckWhenNeeded()){
+    launchPolicy = std::launch::deferred;
+  }else{
+    launchPolicy = std::launch::async;
+  }
+
   for(const std::shared_ptr<Backend>& backend : loadedBackends) {
     if(backend->staticSettingsCheck(settings.getBackendRequirements())) {
       logger.log(Logger::Debug) << backend->getName() << " has all required features." << '\n';
-      backends.push_back(backend);
+      backends.emplace(std::async(launchPolicy, &Uploader::checkBackend, this, backend));
     } else {
       logger.log(Logger::Debug) << backend->getName() << " does not have all required features." << '\n';
     }
   }
 }
 
-bool Uploader::checkNextBackend() {
-  std::promise<std::shared_ptr<Backend>> nextBackendPromise;
-  std::future<std::shared_ptr<Backend>> future = nextBackendPromise.get_future();
-  checkNextBackend(nextBackendPromise);
-  try {
-    std::shared_ptr<Backend> nextBackend = future.get();
-    checkedBackends.push_back(nextBackend);
-    return true;
-  } catch(const std::runtime_error& e) {
-    logger.log(Logger::Debug) << e.what() << '\n';
-    return false;
-  }
-}
-
-void Uploader::checkNextBackend(std::promise<std::shared_ptr<Backend>>& promise) {
-  if(backends.empty()) {
-    promise.set_exception(std::make_exception_ptr(std::runtime_error("There is no backend matching your requirements")));
-    return;
-  }
-  std::shared_ptr<Backend> nextBackend = backends.front();
-  backends.pop_front();
-  logger.log(Logger::Debug) << "Checking backend " << nextBackend->getName() << "." << '\n';
-  nextBackend->dynamicSettingsCheck(
+void Uploader::checkBackend(const std::shared_ptr<Backend>& backend) {
+  backend->dynamicSettingsCheck(
       settings.getBackendRequirements(),
-      [this, &promise, &nextBackend]() {
-        try {
-          promise.set_value(nextBackend);
-        } catch(const std::exception& e) {
-          logger.log(Logger::Fatal) << "Failed to set promise value. If your are compiling this code yourself, you probably forgot to "
-                                       "enable threads . Try '-pthread'."
-                                    << '\n';
-          quit::unexpectedFailure();
-        }
+      [this, &backend]() {
+          std::unique_lock<std::mutex> lock(checkedBackendsMutex);
+          checkedBackends.push_back(backend);
       },
-      [this, &promise](const std::string& message) {
-        logger.log(Logger::Debug) << "Failed to check backend: " << message << "." << '\n';
-        checkNextBackend(promise);
+      [this](const std::string& message) {
+        logger.log(Logger::Info) << "Failed to check backend: " << message << "." << '\n';
       },
       200);
 }

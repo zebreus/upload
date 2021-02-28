@@ -8,6 +8,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <queue>
 
 #include "backendloader.hpp"
 #include "logger.hpp"
@@ -15,8 +16,12 @@
 #include "settings.hpp"
 
 class Uploader {
-  std::list<std::shared_ptr<Backend>> backends;
+
+  //Lock the mutex, when accessing checkedBackends;
+  std::mutex checkedBackendsMutex;
+  std::queue<std::future<void>> backends;
   std::vector<std::shared_ptr<Backend>> checkedBackends;
+
   Settings settings;
 
  public:
@@ -27,8 +32,7 @@ class Uploader {
   std::string uploadFile(const File& file, const std::shared_ptr<Backend>& backend);
   void printAvailableBackends();
   void initializeBackends();
-  bool checkNextBackend();
-  void checkNextBackend(std::promise<std::shared_ptr<Backend>>& promise);
+  void checkBackend(const std::shared_ptr<Backend>& backend);
 };
 
 #endif
