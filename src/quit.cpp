@@ -17,7 +17,7 @@
 }
 
 [[noreturn]] void quit::failedReadingFiles() {
-  exit(65);
+  exit(66);
 }
 
 [[noreturn]] void quit::unexpectedFailure() {
