@@ -18,9 +18,12 @@ CXX=g++
 MKDIR=mkdir -p
 MAKEOVERRIDES += CXX:=$(CXX)
 
-COMMON_CXX_FLAGS := -std=c++2a -Os -DUPLOAD_PLUGIN_DIR=$(INSTALL_PLUGIN_DIR) -DCPPHTTPLIB_OPENSSL_SUPPORT
+COMMON_CXX_FLAGS = -std=c++2a -Os -DUPLOAD_PLUGIN_DIR=$(INSTALL_PLUGIN_DIR) -DCPPHTTPLIB_OPENSSL_SUPPORT
 #$(GCC_WARNING_FLAGS)
-export COMMON_LD_FLAGS := -Os -Wl,-as-needed -Wl,-z,relro,-z,now 
+release: COMMON_CXX_FLAGS += -DINTEGRATED_CERTIFICATES
+export COMMON_CXX_FLAGS
+
+export COMMON_LD_FLAGS := -Os -Wl,-as-needed -Wl,-z,relro,-z,now
 
 BACKENDS_DIR = backends
 BACKENDS_BUILD_DIR = ../../$(BUILD_DIR)
@@ -41,12 +44,12 @@ STATIC_INCLUDE_FLAGS += $(INCLUDE_FLAGS)
 STATIC_INCLUDE_FLAGS += -isystem $(LIB_DIR)/cpp-httplib
 STATIC_INCLUDE_FLAGS += $(BACKENDS:%=-I$(BACKENDS_DIR)/%)
 
-STATIC_CXX_FLAGS := $(COMMON_CXX_FLAGS) -s -MMD -MP -isystem $(LIB_DIR)/cpp-httplib $(STATIC_INCLUDE_FLAGS) -DSTATIC_LOADER
+STATIC_CXX_FLAGS := $(COMMON_CXX_FLAGS) -MMD -MP -isystem $(LIB_DIR)/cpp-httplib $(STATIC_INCLUDE_FLAGS) -DSTATIC_LOADER
 CXX_FLAGS := $(STATIC_CXX_FLAGS)
 DYNAMIC_CXX_FLAGS := $(COMMON_CXX_FLAGS) -MMD -MP $(INCLUDE_FLAGS)
 
-LD_FLAGS := $(COMMON_LD_FLAGS) -s -lssl -lcrypto -pthread -lpthread
-STATIC_LD_FLAGS := $(COMMON_LD_FLAGS) -s -static -lrt -lssl -lcrypto -pthread -lpthread
+LD_FLAGS := $(COMMON_LD_FLAGS) -lssl -lcrypto -pthread -lpthread
+STATIC_LD_FLAGS := $(COMMON_LD_FLAGS) -static -lrt -lssl -lcrypto -pthread -lpthread
 DYNAMIC_LD_FLAGS := $(COMMON_LD_FLAGS) -pthread -ldl -rdynamic
 
 SRCS := $(wildcard $(SRC_DIR)/*.cpp)
@@ -96,7 +99,7 @@ $(SHARED_BACKEND_LIBS): $(BUILD_DIR)/lib%.so :
 -include $(DEPS)
 
 clean:
-	$(RM) -r $(BUILD_DIR)
+	$(RM) -r $(BUILD_DIR) $(STATIC_BUILD_DIR) $(DYNAMIC_BUILD_DIR) upload generator include/cacert.hpp
 
 ## Section for formatting
 
@@ -125,3 +128,12 @@ generator: generator.cpp
 include/cacert.hpp: cacert.pem generator
 	./generator cacert.pem cacert.hpp
 	mv cacert.hpp include
+
+## Section for generating compressed and stripped release binary
+
+release: include/cacert.hpp upload
+
+upload: $(STATIC_BUILD_DIR)/$(UPLOAD)
+	cp $(STATIC_BUILD_DIR)/$(UPLOAD) upload
+	strip upload
+	upx --lzma upload
