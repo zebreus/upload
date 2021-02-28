@@ -35,7 +35,7 @@ BackendRequirements Settings::getBackendRequirements() const {
 }
 
 bool Settings::getContinueLoading() const {
-  return continueUploading;
+  return continueLoading;
 }
 bool Settings::getContinueUploading() const {
   return continueUploading;
