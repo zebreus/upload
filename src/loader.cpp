@@ -259,6 +259,7 @@ bool Loader::isReadable(const std::filesystem::path& path) {
   return true;
 }
 
+//TODO rewrite this method
 std::shared_ptr<File> Loader::createArchive(const std::vector<std::filesystem::path>& files, const std::string& name, bool directoryCreation) {
   miniz_cpp::zip_file file;
   logger.log(Logger::Debug) << "Creating archive " << name << ". " << '\n';
@@ -267,8 +268,12 @@ std::shared_ptr<File> Loader::createArchive(const std::vector<std::filesystem::p
       std::error_code error;
       std::filesystem::path canonicalPath = std::filesystem::canonical(path, error);
       if(error) {
-        logger.log(Logger::Fatal) << "Failed to create canonical path of " << path << " . This should not happen." << '\n';
-        quit::failedReadingFiles();
+        logger.log(Logger::LoadFatal) << "Failed to create canonical path of " << path << " . This should not happen." << '\n';
+        if(!settings.getContinueLoading()) {
+          quit::failedReadingFiles();
+        }
+        logger.log(Logger::LoadFatal) << "Ignoring that and continuing." << '\n';
+        continue;
       }
 
       std::filesystem::path basePath = canonicalPath;
@@ -281,14 +286,22 @@ std::shared_ptr<File> Loader::createArchive(const std::vector<std::filesystem::p
         try {
           std::filesystem::file_status status = ensureFileStatus(p.path());
           if(status.type() != std::filesystem::file_type::regular && status.type() != std::filesystem::file_type::directory) {
-            logger.log(Logger::Fatal) << "Only regular files and directories can be archived. You tried to archive " << path
+            logger.log(Logger::LoadFatal) << "Only regular files and directories can be archived. You tried to archive " << path
                                       << ", which is neither." << '\n';
-            quit::failedReadingFiles();
+            if(!settings.getContinueLoading()) {
+              quit::failedReadingFiles();
+            }
+            logger.log(Logger::LoadFatal) << "Ignoring that and continuing." << '\n';
+            continue;
           }
           std::filesystem::path realPath = std::filesystem::canonical(p.path(), error);
           if(error) {
             logger.log(Logger::Fatal) << "Failed to create canonical path of " << path << " . This should not happen." << '\n';
-            quit::failedReadingFiles();
+            if(!settings.getContinueLoading()) {
+              quit::failedReadingFiles();
+            }
+            logger.log(Logger::LoadFatal) << "Ignoring that and continuing." << '\n';
+            continue;
           }
 
           // Path in archive
@@ -302,8 +315,11 @@ std::shared_ptr<File> Loader::createArchive(const std::vector<std::filesystem::p
             file.writestr(resultPath, f.getContent());
           }
         } catch(const std::runtime_error& error) {
-          logger.log(Logger::Fatal) << error.what() << '\n';
-          quit::failedReadingFiles();
+          logger.log(Logger::LoadFatal) << error.what() << '\n';
+          if(!settings.getContinueLoading()) {
+            quit::failedReadingFiles();
+          }
+          continue;
         }
       }
 

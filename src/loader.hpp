@@ -89,7 +89,7 @@ class Loader {
   // Throws std::runtime_error, when all paths have been read
   std::filesystem::path getUnprocessedPath();
 
-  static std::shared_ptr<File> createArchive(const std::vector<std::filesystem::path>& files, const std::string& name, bool directoryCreation);
+  std::shared_ptr<File> createArchive(const std::vector<std::filesystem::path>& files, const std::string& name, bool directoryCreation);
 };
 
 #endif
