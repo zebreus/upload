@@ -26,6 +26,7 @@ class Settings {
   ArchiveType archiveType;
   std::string archiveName;
   std::vector<std::string> requestedBackends;
+  std::vector<std::string> excludedBackends;
   std::vector<std::string> files;
   bool directoryArchive;
   BackendRequirements requirements;
@@ -41,6 +42,7 @@ class Settings {
   [[nodiscard]] ArchiveType getArchiveType() const;
   [[nodiscard]] std::string getArchiveName() const;
   [[nodiscard]] std::vector<std::string> getRequestedBackends() const;
+  [[nodiscard]] std::vector<std::string> getExcludedBackends() const;
   [[nodiscard]] std::vector<std::string> getFiles() const;
   [[nodiscard]] bool getDirectoryArchive() const;
   [[nodiscard]] BackendRequirements getBackendRequirements() const;

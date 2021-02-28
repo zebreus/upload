@@ -115,6 +115,14 @@ void Uploader::initializeBackends() {
     loadedBackends = orderedBackends;
   }
 
+  for(const std::string& name : settings.getExcludedBackends()) {
+    for(auto backend = loadedBackends.rbegin(); backend != loadedBackends.rend(); ++backend) {
+      if(backend->get()->getName() == name) {
+        loadedBackends.erase(std::next(backend).base());
+      }
+    }
+  }
+
   std::launch launchPolicy;
   if(settings.getCheckWhenNeeded()){
     launchPolicy = std::launch::deferred;

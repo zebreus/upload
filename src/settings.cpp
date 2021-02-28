@@ -22,6 +22,10 @@ std::vector<std::string> Settings::getRequestedBackends() const {
   return requestedBackends;
 }
 
+std::vector<std::string> Settings::getExcludedBackends() const {
+  return excludedBackends;
+}
+
 std::vector<std::string> Settings::getFiles() const {
   return files;
 }
@@ -60,6 +64,7 @@ cxxopts::Options Settings::generateParser() {
   ;
   options.add_options("Backend selection")
   ("b,backend", "Add a specific backend. If this option is used, the default order is discarded.", cxxopts::value<std::vector<std::string>>())
+  ("e,exclude-backend", "Do not use a specific backend.", cxxopts::value<std::vector<std::string>>())
   ("p,preserve-name", "Ensure that the filenames are preserved.")
   ("no-preserve-name", "Ensure that the filenames are not preserved.")
   ("s,ssl", "Ensure the use of https.")
@@ -108,6 +113,9 @@ void Settings::parseOptions(int argc, char** argv) {
     archiveType = parseArchiveType(result);
     if(result.count("backend")) {
       requestedBackends = result["backend"].template as<std::vector<std::string>>();
+    }
+    if(result.count("exclude-backend")) {
+      excludedBackends = result["exclude-backend"].template as<std::vector<std::string>>();
     }
     archiveName = parseArchiveName(result, archiveType);
     directoryArchive = parseDirectoryArchive(result, mode);
