@@ -5,10 +5,10 @@
 #include <future>
 #include <list>
 #include <memory>
+#include <queue>
 #include <stdexcept>
 #include <string>
 #include <vector>
-#include <queue>
 
 #include "backendloader.hpp"
 #include "logger.hpp"
@@ -16,8 +16,7 @@
 #include "settings.hpp"
 
 class Uploader {
-
-  //Lock the mutex, when accessing checkedBackends;
+  // Lock the mutex, when accessing checkedBackends;
   std::mutex checkedBackendsMutex;
   std::queue<std::future<void>> backends;
   std::vector<std::shared_ptr<Backend>> checkedBackends;

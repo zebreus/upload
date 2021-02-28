@@ -259,7 +259,7 @@ bool Loader::isReadable(const std::filesystem::path& path) {
   return true;
 }
 
-//TODO rewrite this method
+// TODO rewrite this method
 std::shared_ptr<File> Loader::createArchive(const std::vector<std::filesystem::path>& files, const std::string& name, bool directoryCreation) {
   miniz_cpp::zip_file file;
   logger.log(Logger::Debug) << "Creating archive " << name << ". " << '\n';
@@ -287,7 +287,7 @@ std::shared_ptr<File> Loader::createArchive(const std::vector<std::filesystem::p
           std::filesystem::file_status status = ensureFileStatus(p.path());
           if(status.type() != std::filesystem::file_type::regular && status.type() != std::filesystem::file_type::directory) {
             logger.log(Logger::LoadFatal) << "Only regular files and directories can be archived. You tried to archive " << path
-                                      << ", which is neither." << '\n';
+                                          << ", which is neither." << '\n';
             if(!settings.getContinueLoading()) {
               quit::failedReadingFiles();
             }

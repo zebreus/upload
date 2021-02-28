@@ -9,16 +9,15 @@ Uploader::Uploader(const Settings& settings): settings(settings) {
 }
 
 std::string Uploader::uploadFile(const File& file) {
-  //This loop does not need to lock the mutex
+  // This loop does not need to lock the mutex
   while(checkedBackends.empty() && !backends.empty()) {
     backends.front().get();
     backends.pop();
   }
 
   size_t pos;
-  //This loop does not need to lock the mutex here
-  for(pos = 0;pos < checkedBackends.size() ;pos++) {
-
+  // This loop does not need to lock the mutex here
+  for(pos = 0; pos < checkedBackends.size(); pos++) {
     std::shared_ptr<Backend> backend;
     {
       std::unique_lock<std::mutex> lock(checkedBackendsMutex);
@@ -32,8 +31,8 @@ std::string Uploader::uploadFile(const File& file) {
       logger.log(Logger::Info) << "Unexpected error while uploading " << file.getName() << " to " << backend->getName() << "." << '\n';
     }
 
-    //This loop does not need to lock the mutex
-    while(pos == checkedBackends.size()-1 && !backends.empty()) {
+    // This loop does not need to lock the mutex
+    while(pos == checkedBackends.size() - 1 && !backends.empty()) {
       backends.front().get();
       backends.pop();
     }
@@ -124,9 +123,9 @@ void Uploader::initializeBackends() {
   }
 
   std::launch launchPolicy;
-  if(settings.getCheckWhenNeeded()){
+  if(settings.getCheckWhenNeeded()) {
     launchPolicy = std::launch::deferred;
-  }else{
+  } else {
     launchPolicy = std::launch::async;
   }
 
@@ -144,8 +143,8 @@ void Uploader::checkBackend(const std::shared_ptr<Backend>& backend) {
   backend->dynamicSettingsCheck(
       settings.getBackendRequirements(),
       [this, &backend]() {
-          std::unique_lock<std::mutex> lock(checkedBackendsMutex);
-          checkedBackends.push_back(backend);
+        std::unique_lock<std::mutex> lock(checkedBackendsMutex);
+        checkedBackends.push_back(backend);
       },
       [this](const std::string& message) {
         logger.log(Logger::Info) << "Failed to check backend: " << message << "." << '\n';
