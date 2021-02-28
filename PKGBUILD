@@ -1,7 +1,7 @@
 # Maintainer: Lennart Eichhorn <lennart@madmanfred.com>
 
 pkgname="upload"
-pkgver=0.1
+pkgver=0.2
 pkgrel=1
 pkgdesc="A simple tool for uploading files to the internet"
 arch=('x86_64' 'i686' 'aarch64')
@@ -24,14 +24,14 @@ package(){
     cd "$srcdir/upload"
     
     # compile sources
-    make all INSTALL_PLUGIN_DIR=/usr/lib/upload DYNAMIC=yeah
+    make dynamic INSTALL_PLUGIN_DIR=/usr/lib/upload
     
     # generate manpage
     ronn upload.ronn --roff
     
     # move executable into correct directory
     mkdir -p "$pkgdir/usr/bin"
-    install -m 0755 -t "$pkgdir/usr/bin" "build/upload"
+    install -m 0755 -t "$pkgdir/usr/bin" "build-dynamic/upload"
     
     # move plugins into correct directory
     mkdir -p "$pkgdir/usr/lib/upload/"
