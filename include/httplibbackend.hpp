@@ -9,7 +9,7 @@
 
 class HttplibBackend: public Backend {
  public:
-  HttplibBackend(bool useSSL, std::string url, std::string name);
+  HttplibBackend(bool useSSL, std::string url, std::string name, const std::string& userAgent = uploadUserAgent);
   ~HttplibBackend() override;
   [[nodiscard]] std::string getName() const override;
   [[nodiscard]] bool staticSettingsCheck(BackendRequirements requirements) const override;
@@ -24,7 +24,7 @@ class HttplibBackend: public Backend {
                   std::function<void(std::string)> errorCallback) override = 0;
 
  protected:
-  static constexpr auto userAgent = "upload/0.0";
+  static constexpr auto uploadUserAgent = "upload/0.0";
   // TODO improve expression
   static constexpr auto urlRegexString = "http[-\\]_.~!*'();:@&=+$,/?%#[A-z0-9]+";
   static constexpr auto randomCharacter = ' ';
@@ -36,7 +36,7 @@ class HttplibBackend: public Backend {
 
   [[nodiscard]] bool isReachable(std::string& errorMessage);
   [[nodiscard]] bool checkFile(const File& f) const;
-  void initializeClient();
+  void initializeClient(const std::string& userAgent);
   std::string getErrorMessage(httplib::Error error);
   [[nodiscard]] static bool checkMimetype(const File& file, const std::vector<std::string>& blacklist);
   std::string postForm(const httplib::MultipartFormDataItems& form, const httplib::Headers& headers = {});
@@ -51,7 +51,7 @@ class HttplibBackend: public Backend {
   [[nodiscard]] static bool checkUrl(const BackendRequirements& requirements, size_t length, size_t randomPart);
 };
 
-inline HttplibBackend::HttplibBackend(bool useSSL, std::string url, std::string name)
+inline HttplibBackend::HttplibBackend(bool useSSL, std::string url, std::string name, const std::string& userAgent)
     : name(std::move(name)), url(std::move(url)), useSSL(useSSL), client(nullptr) {
   if(useSSL) {
     capabilities.http = false;
@@ -64,7 +64,7 @@ inline HttplibBackend::HttplibBackend(bool useSSL, std::string url, std::string 
   capabilities.minRetention = 0ll;
   capabilities.maxRetention = 0ll;
 
-  initializeClient();
+  initializeClient(userAgent);
 }
 
 inline HttplibBackend::~HttplibBackend() {
@@ -168,7 +168,7 @@ inline void loadIntegratedCerts(SSL_CTX* ctx) {
 #endif
 #endif
 
-inline void HttplibBackend::initializeClient() {
+inline void HttplibBackend::initializeClient(const std::string& userAgent) {
   if(client == nullptr) {
     std::string httpUrl;
     if(useSSL) {
