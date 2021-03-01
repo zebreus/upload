@@ -4,6 +4,12 @@ STATIC_BUILD_DIR := build-static
 LIB_DIR := libs
 SRC_DIR := src
 
+ifeq ($(OS),Windows_NT)
+	PLATFORM := Windows
+else
+	PLATFORM := $(shell uname -s)
+endif
+
 # Upload will load plugins from here
 INSTALL_PLUGIN_DIR := $(abspath $(BUILD_DIR))
 
@@ -23,7 +29,11 @@ COMMON_CXX_FLAGS = -std=c++2a -Os -DUPLOAD_PLUGIN_DIR=$(INSTALL_PLUGIN_DIR) -DCP
 release: COMMON_CXX_FLAGS += -DINTEGRATED_CERTIFICATES
 export COMMON_CXX_FLAGS
 
-export COMMON_LD_FLAGS := -Os -Wl,-as-needed -Wl,-z,relro,-z,now
+COMMON_LD_FLAGS := -Os
+ifeq ($(PLATFORM),Linux)
+	COMMON_LD_FLAGS += -Wl,-as-needed -Wl,-z,relro,-z,now
+endif
+export COMMON_LD_FLAGS
 
 BACKENDS_DIR = backends
 BACKENDS_BUILD_DIR = ../../$(BUILD_DIR)
@@ -49,7 +59,7 @@ CXX_FLAGS := $(STATIC_CXX_FLAGS)
 DYNAMIC_CXX_FLAGS := $(COMMON_CXX_FLAGS) -MMD -MP $(INCLUDE_FLAGS)
 
 LD_FLAGS := $(COMMON_LD_FLAGS) -lssl -lcrypto -pthread -lpthread
-STATIC_LD_FLAGS := $(COMMON_LD_FLAGS) -static -lrt -lssl -lcrypto -pthread -lpthread
+STATIC_LD_FLAGS := $(COMMON_LD_FLAGS) -static  -lssl -lcrypto -pthread -lpthread
 DYNAMIC_LD_FLAGS := $(COMMON_LD_FLAGS) -pthread -ldl -rdynamic
 
 SRCS := $(wildcard $(SRC_DIR)/*.cpp)

@@ -509,7 +509,8 @@ long Settings::parseSizeString(const std::string& sizeString) {
   }
 }
 
-#ifdef __unix__
+#if defined(__unix__) || defined(__APPLE__)
+#include <unistd.h>
 bool Settings::isInteractiveSession() {
   return isatty(fileno(stdin));
 }

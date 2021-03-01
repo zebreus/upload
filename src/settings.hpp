@@ -12,10 +12,6 @@
 #include "backendrequirements.hpp"
 #include "quit.hpp"
 
-#ifdef __unix__
-#include <unistd.h>
-#endif
-
 class Settings {
  public:
   enum Mode { Individual, Archive, List };
