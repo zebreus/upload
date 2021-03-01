@@ -26,7 +26,7 @@ class HttplibBackend: public Backend {
  protected:
   static constexpr auto uploadUserAgent = "upload/0.0";
   // TODO improve expression
-  static constexpr auto urlRegexString = "http[-\\]_.~!*'();:@&=+$,/?%#[A-z0-9]+";
+  static constexpr auto defaultUrlRegex = "http[-\\]_.~!*'();:@&=+$,/?%#[A-z0-9]+";
   static constexpr auto randomCharacter = ' ';
   std::string name;
   std::string url;
@@ -41,7 +41,7 @@ class HttplibBackend: public Backend {
   [[nodiscard]] static bool checkMimetype(const File& file, const std::vector<std::string>& blacklist);
   std::string postForm(const httplib::MultipartFormDataItems& form, const httplib::Headers& headers = {});
   std::string putFile(const File& file, const httplib::Headers& headers = {});
-  static std::vector<std::string> findValidUrls(const std::string& input);
+  static std::vector<std::string> findValidUrls(const std::string& input, const std::string& urlRegex = defaultUrlRegex);
   [[nodiscard]] long long determineRetention(const BackendRequirements& requirements) const;
   [[nodiscard]] long determineMaxDownloads(const BackendRequirements& requirements) const;
   [[nodiscard]] [[maybe_unused]] virtual std::string predictBaseUrl() const;
@@ -280,8 +280,8 @@ inline std::string HttplibBackend::putFile(const File& file, const httplib::Head
   }
 }
 
-inline std::vector<std::string> HttplibBackend::findValidUrls(const std::string& input) {
-  std::regex urlExpression(urlRegexString, std::regex::icase | std::regex::ECMAScript);
+inline std::vector<std::string> HttplibBackend::findValidUrls(const std::string& input, const std::string& urlRegex) {
+  std::regex urlExpression(urlRegex, std::regex::icase | std::regex::ECMAScript);
   auto urlsBegin = std::sregex_iterator(input.begin(), input.end(), urlExpression);
   auto urlsEnd = std::sregex_iterator();
 
