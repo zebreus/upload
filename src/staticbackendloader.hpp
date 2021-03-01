@@ -1,4 +1,5 @@
 #include <fileiobackend.hpp>
+#include <ixbackend.hpp>
 #include <nullpointerbackend.hpp>
 #include <oshibackend.hpp>
 #include <transfershbackend.hpp>
@@ -21,6 +22,10 @@ std::vector<std::shared_ptr<Backend>> loadBackends() {
   }
 
   for(Backend* backend : FileIoBackend::loadBackends()) {
+    backends.push_back(std::shared_ptr<Backend>(backend));
+  }
+
+  for(Backend* backend : IxBackend::loadBackends()) {
     backends.push_back(std::shared_ptr<Backend>(backend));
   }
 

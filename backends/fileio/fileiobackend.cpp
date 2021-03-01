@@ -24,9 +24,9 @@ bool FileIoBackend::staticFileCheck(BackendRequirements requirements, const File
 }
 
 void FileIoBackend::uploadFile(BackendRequirements requirements,
-                                    const File& file,
-                                    std::function<void(std::string)> successCallback,
-                                    std::function<void(std::string)> errorCallback) {
+                               const File& file,
+                               std::function<void(std::string)> successCallback,
+                               std::function<void(std::string)> errorCallback) {
   httplib::MultipartFormDataItems items = {{"file", file.getContent(), file.getName(), file.getMimetype()}};
 
   std::string endpoint;

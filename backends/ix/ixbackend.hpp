@@ -1,19 +1,19 @@
-#ifndef KEEP_SH_BACKEND_HPP
-#define KEEP_SH_BACKEND_HPP
+#ifndef IX_BACKEND_HPP
+#define IX_BACKEND_HPP
 
 #include <httplib.h>
 
+#include <backend.hpp>
 #include <httplibbackend.hpp>
 #include <logger.hpp>
 #include <regex>
 #include <string>
 #include <variant>
 
-// TODO The KeepShBackend should not be used yet, as the generated links do not support direct downloads
-#warning "The KeepShBackend should not be used yet, as the generated links do not support direct downloads"
-class KeepShBackend: public HttplibBackend {
+class IxBackend: public HttplibBackend {
  public:
-  explicit KeepShBackend(bool useSSL, const std::string& url = "free.keep.sh", const std::string& name = "free.keep.sh");
+  explicit IxBackend(bool useSSL, const std::string& url = "ix.io", const std::string& name = "ix");
+  [[nodiscard]] bool staticFileCheck(BackendRequirements requirements, const File& file) const override;
   void uploadFile(BackendRequirements requiredFeatures,
                   const File& file,
                   std::function<void(std::string)> successCallback,
