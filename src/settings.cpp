@@ -110,8 +110,8 @@ void Settings::parseOptions(int argc, char** argv) {
     auto result = options.parse(argc, argv);
 
     if(result.count("help")) {
-      logger.log(Logger::Print) << options.help({""}) << '\n';
-      logger.log(Logger::Print) << "For more options and details see upload(1)" << std::endl;
+      logger.log(Logger::Print) << options.help({"", "Backend selection", "Mode independent", "Individual mode", "Archive mode"}) << '\n';
+      logger.log(Logger::Print) << "For more details see upload(1)." << std::endl;
       quit::success();
     }
 
@@ -331,7 +331,7 @@ BackendRequirements Settings::parseBackendRequirements(const auto& parseResult) 
   }
   if(parseResult.count("no-https")) {
     requirements.https.reset(new bool(false));
-  }else{
+  } else {
     requirements.https.reset(new bool(true));
   }
 
@@ -341,7 +341,7 @@ BackendRequirements Settings::parseBackendRequirements(const auto& parseResult) 
   }
   if(parseResult.count("http")) {
     requirements.http.reset(new bool(true));
-  }else{
+  } else {
     requirements.http.reset(new bool(false));
   }
 
