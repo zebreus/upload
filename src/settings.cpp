@@ -71,8 +71,10 @@ cxxopts::Options Settings::generateParser() {
   ("e,exclude-backend", "Do not use a specific backend.", cxxopts::value<std::vector<std::string>>())
   ("p,preserve-name", "Ensure that the filenames are preserved.")
   ("no-preserve-name", "Ensure that the filenames are not preserved.")
-  ("s,ssl", "Ensure the use of https.")
-  ("no-ssl", "Ensure the use of http.")
+  ("s,https", "Enable uploading files with https.")
+  ("no-https", "Disable uploading files with https.")
+  ("http", "Enable uploading files with http.")
+  ("no-http", "Disable uploading files with http.")
   ("min-retention", "Make sure the file is kept longer than TIME.", cxxopts::value<std::string>(), "TIME")
   ("max-retention", "Make sure the file is not kept longer than TIME.", cxxopts::value<std::string>(), "TIME")
   ("min-size", "Only use backend that accept files bigger than BYTES.", cxxopts::value<std::string>(), "BYTES")
@@ -323,16 +325,24 @@ BackendRequirements Settings::parseBackendRequirements(const auto& parseResult) 
     requirements.preserveName.reset(new bool(false));
   }
 
-  if(parseResult.count("ssl") && parseResult.count("no-ssl")) {
-    logger.log(Logger::Fatal) << "You cannot have ssl and no-ssl, try leaving one away" << '\n';
+  if(parseResult.count("https") && parseResult.count("no-https")) {
+    logger.log(Logger::Fatal) << "You cannot have https and no-https, try leaving one away" << '\n';
     quit::invalidCliUsage();
   }
-
-  if(parseResult.count("ssl")) {
+  if(parseResult.count("no-https")) {
+    requirements.https.reset(new bool(false));
+  }else{
     requirements.https.reset(new bool(true));
   }
-  if(parseResult.count("no-ssl")) {
+
+  if(parseResult.count("http") && parseResult.count("no-http")) {
+    logger.log(Logger::Fatal) << "You cannot have http and no-http, try leaving one away" << '\n';
+    quit::invalidCliUsage();
+  }
+  if(parseResult.count("http")) {
     requirements.http.reset(new bool(true));
+  }else{
+    requirements.http.reset(new bool(false));
   }
 
   if(parseResult.count("min-size")) {

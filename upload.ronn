@@ -122,11 +122,19 @@ All letters are converted to lowercase before evaluation.
  * `--no-preserve-name` :
    Ensure, that the selected backend randomizes the filename.
 
- * `-s`, `--ssl` :
-   Ensure, that each file will be upload using https and generates a https url
+ * `-s`, `--https` :
+   Enable uploading files with https.
+   This is activated by default.
 
- * `--no-ssl` :
-   Ensure, that each file will be upload using http and generates a http url
+ * `--no-https` :
+   Disable uploading files with https.
+   
+ * `--http` :
+   Enable uploading files with http.
+
+ * `--no-http` :
+   Disable uploading files with http.
+   This is activated by default.
 
  * `--min-retention`=<time> :
    Ensure, that each file is available to download for at least <time>.
