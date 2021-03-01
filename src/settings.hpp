@@ -28,7 +28,7 @@ class Settings {
   BackendRequirements requirements;
   bool continueUploading;
   bool continueLoading;
-  bool checkWhenNeeded;
+  bool deferCheck;
   long long checkTimeout;
 
   static constexpr ArchiveType defaultArchiveType = ArchiveType::Zip;
@@ -45,7 +45,7 @@ class Settings {
   [[nodiscard]] BackendRequirements getBackendRequirements() const;
   [[nodiscard]] bool getContinueLoading() const;
   [[nodiscard]] bool getContinueUploading() const;
-  [[nodiscard]] bool getCheckWhenNeeded() const;
+  [[nodiscard]] bool getDeferCheck() const;
   [[nodiscard]] long long getCheckTimeout() const;
 
  private:

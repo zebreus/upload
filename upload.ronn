@@ -99,7 +99,7 @@ All letters are converted to lowercase before evaluation.
  * `--continue-upload` :
    Do not fail if uploading a file failed.
    
- * `--check-when-needed` :
+ * `--defer-check` :
    Only check if a backend is online, if upload to all previously checked backends failed.
    By default all backends will be checked simultaneously at start.
    

@@ -123,7 +123,7 @@ void Uploader::initializeBackends() {
   }
 
   std::launch launchPolicy;
-  if(settings.getCheckWhenNeeded()) {
+  if(settings.getDeferCheck()) {
     launchPolicy = std::launch::deferred;
   } else {
     launchPolicy = std::launch::async;

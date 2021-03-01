@@ -47,8 +47,8 @@ class HttplibBackend: public Backend {
   [[nodiscard]] [[maybe_unused]] virtual std::string predictBaseUrl() const;
   [[nodiscard]] [[maybe_unused]] virtual std::string predictUrl(BackendRequirements requirements, const File& file) const;
   // Check a possible fullUrl. Random parts in the fullUrl should be replaced with randomCharacter
-  [[nodiscard]] static bool checkUrl(const BackendRequirements& requirements, const std::string& fullUrl) ;
-  [[nodiscard]] static bool checkUrl(const BackendRequirements& requirements, size_t length, size_t randomPart) ;
+  [[nodiscard]] static bool checkUrl(const BackendRequirements& requirements, const std::string& fullUrl);
+  [[nodiscard]] static bool checkUrl(const BackendRequirements& requirements, size_t length, size_t randomPart);
 };
 
 inline HttplibBackend::HttplibBackend(bool useSSL, std::string url, std::string name)
@@ -93,9 +93,9 @@ inline void HttplibBackend::dynamicSettingsCheck(BackendRequirements requirement
                                                  std::function<void(std::string)> errorCallback,
                                                  int timeoutMillis) {
   std::string errorMessage;
-  client->set_connection_timeout(0, timeoutMillis*1000);
-  client->set_read_timeout(0, timeoutMillis*1000);
-  client->set_write_timeout(0, timeoutMillis*1000);
+  client->set_connection_timeout(0, timeoutMillis * 1000);
+  client->set_read_timeout(0, timeoutMillis * 1000);
+  client->set_write_timeout(0, timeoutMillis * 1000);
 
   bool reachable = isReachable(errorMessage);
 
@@ -106,7 +106,6 @@ inline void HttplibBackend::dynamicSettingsCheck(BackendRequirements requirement
   } else {
     errorCallback(errorMessage);
   }
-
 }
 
 inline bool HttplibBackend::isReachable(std::string& errorMessage) {

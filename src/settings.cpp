@@ -46,8 +46,8 @@ bool Settings::getContinueUploading() const {
   return continueUploading;
 }
 
-bool Settings::getCheckWhenNeeded() const {
-  return checkWhenNeeded;
+bool Settings::getDeferCheck() const {
+  return deferCheck;
 }
 
 long long Settings::getCheckTimeout() const {
@@ -88,7 +88,7 @@ cxxopts::Options Settings::generateParser() {
   ("c,continue", "Do not fail if opening or uploading a file failed.")
   ("continue-file", "Do not fail if opening a file failed.")
   ("continue-upload", "Do not fail if uploading a file failed.")
-  ("check-when-needed", "Only check backends, if no other backends are available.")
+  ("defer-check", "Only check backends, if no other backends are available.")
   ("check-timeout", "The timeout when checking a backend.", cxxopts::value<std::string>()->default_value("500"), "TIME")
   ;
   options.add_options("Individual mode")
@@ -127,7 +127,7 @@ void Settings::parseOptions(int argc, char** argv) {
     directoryArchive = parseDirectoryArchive(result, mode);
     requirements = parseBackendRequirements(result);
     parseContinue(result);
-    checkWhenNeeded = result.count("check-when-needed");
+    deferCheck = result.count("defer-check");
     checkTimeout = parseTimeString(result["check-timeout"].as<std::string>());
   } catch(const cxxopts::OptionException& e) {
     logger.log(Logger::Fatal) << e.what() << '\n';
