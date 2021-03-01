@@ -102,6 +102,9 @@ All letters are converted to lowercase before evaluation.
  * `--check-when-needed` :
    Only check if a backend is online, if upload to all previously checked backends failed.
    By default all backends will be checked simultaneously at start.
+   
+ * `--check-timeout`=<time> :
+   If a backend does not respond before the timeout, it will not be used.
 
 ### Backend selection options. Specify some requirements that the backend must meet.
 

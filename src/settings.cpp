@@ -50,6 +50,10 @@ bool Settings::getCheckWhenNeeded() const {
   return checkWhenNeeded;
 }
 
+long long Settings::getCheckTimeout() const {
+  return checkTimeout;
+}
+
 cxxopts::Options Settings::generateParser() {
   cxxopts::Options options("upload", "Upload files to the internet");
   // clang-format off
@@ -85,6 +89,7 @@ cxxopts::Options Settings::generateParser() {
   ("continue-file", "Do not fail if opening a file failed.")
   ("continue-upload", "Do not fail if uploading a file failed.")
   ("check-when-needed", "Only check backends, if no other backends are available.")
+  ("check-timeout", "The timeout when checking a backend.", cxxopts::value<std::string>()->default_value("500"), "TIME")
   ;
   options.add_options("Individual mode")
   ;
@@ -123,6 +128,7 @@ void Settings::parseOptions(int argc, char** argv) {
     requirements = parseBackendRequirements(result);
     parseContinue(result);
     checkWhenNeeded = result.count("check-when-needed");
+    checkTimeout = parseTimeString(result["check-timeout"].as<std::string>());
   } catch(const cxxopts::OptionException& e) {
     logger.log(Logger::Fatal) << e.what() << '\n';
     quit::invalidCliUsage();

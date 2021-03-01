@@ -149,5 +149,5 @@ void Uploader::checkBackend(const std::shared_ptr<Backend>& backend) {
       [this](const std::string& message) {
         logger.log(Logger::Info) << "Failed to check backend: " << message << "." << '\n';
       },
-      400);
+      (int)settings.getCheckTimeout());
 }

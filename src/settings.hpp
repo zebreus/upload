@@ -29,6 +29,7 @@ class Settings {
   bool continueUploading;
   bool continueLoading;
   bool checkWhenNeeded;
+  long long checkTimeout;
 
   static constexpr ArchiveType defaultArchiveType = ArchiveType::Zip;
 
@@ -45,6 +46,7 @@ class Settings {
   [[nodiscard]] bool getContinueLoading() const;
   [[nodiscard]] bool getContinueUploading() const;
   [[nodiscard]] bool getCheckWhenNeeded() const;
+  [[nodiscard]] long long getCheckTimeout() const;
 
  private:
   static cxxopts::Options generateParser();
