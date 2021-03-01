@@ -1,7 +1,7 @@
 # Maintainer: Lennart Eichhorn <lennart@madmanfred.com>
 
 pkgname="upload"
-pkgver=0.2
+pkgver=0.3
 pkgrel=1
 pkgdesc="A simple tool for uploading files to the internet"
 arch=('x86_64' 'i686' 'aarch64')
