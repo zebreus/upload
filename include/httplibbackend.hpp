@@ -47,8 +47,8 @@ class HttplibBackend: public Backend {
   [[nodiscard]] [[maybe_unused]] virtual std::string predictBaseUrl() const;
   [[nodiscard]] [[maybe_unused]] virtual std::string predictUrl(BackendRequirements requirements, const File& file) const;
   // Check a possible fullUrl. Random parts in the fullUrl should be replaced with randomCharacter
-  [[nodiscard]] bool checkUrl(const BackendRequirements& requirements, const std::string& fullUrl) const;
-  [[nodiscard]] bool checkUrl(const BackendRequirements& requirements, size_t length, size_t randomPart) const;
+  [[nodiscard]] static bool checkUrl(const BackendRequirements& requirements, const std::string& fullUrl) ;
+  [[nodiscard]] static bool checkUrl(const BackendRequirements& requirements, size_t length, size_t randomPart) ;
 };
 
 inline HttplibBackend::HttplibBackend(bool useSSL, std::string url, std::string name)
@@ -93,11 +93,20 @@ inline void HttplibBackend::dynamicSettingsCheck(BackendRequirements requirement
                                                  std::function<void(std::string)> errorCallback,
                                                  int timeoutMillis) {
   std::string errorMessage;
-  if(isReachable(errorMessage)) {
+  client->set_connection_timeout(0, timeoutMillis*1000);
+  client->set_read_timeout(0, timeoutMillis*1000);
+  client->set_write_timeout(0, timeoutMillis*1000);
+
+  bool reachable = isReachable(errorMessage);
+
+  client->set_read_timeout(CPPHTTPLIB_READ_TIMEOUT_SECOND, CPPHTTPLIB_READ_TIMEOUT_USECOND);
+  client->set_write_timeout(CPPHTTPLIB_WRITE_TIMEOUT_SECOND, CPPHTTPLIB_WRITE_TIMEOUT_USECOND);
+  if(reachable) {
     successCallback();
   } else {
     errorCallback(errorMessage);
   }
+
 }
 
 inline bool HttplibBackend::isReachable(std::string& errorMessage) {
@@ -311,7 +320,7 @@ inline long HttplibBackend::determineMaxDownloads(const BackendRequirements& req
   return maxDownloads;
 }
 
-inline bool HttplibBackend::checkUrl(const BackendRequirements& requirements, const std::string& fullUrl) const {
+inline bool HttplibBackend::checkUrl(const BackendRequirements& requirements, const std::string& fullUrl) {
   unsigned int randomCharacters = 0;
   for(char c : fullUrl) {
     if(c == randomCharacter) {
@@ -322,7 +331,7 @@ inline bool HttplibBackend::checkUrl(const BackendRequirements& requirements, co
   return checkUrl(requirements, fullUrl.size(), randomCharacters);
 }
 
-inline bool HttplibBackend::checkUrl(const BackendRequirements& requirements, size_t length, size_t randomPart) const {
+inline bool HttplibBackend::checkUrl(const BackendRequirements& requirements, size_t length, size_t randomPart) {
   if(requirements.minRandomPart) {
     if(*requirements.minRandomPart > randomPart) {
       return false;
