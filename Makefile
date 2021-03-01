@@ -37,7 +37,7 @@ export COMMON_LD_FLAGS
 
 BACKENDS_DIR = backends
 BACKENDS_BUILD_DIR = ../../$(BUILD_DIR)
-BACKENDS += nullpointer transfersh oshi
+BACKENDS += nullpointer transfersh oshi fileio
 STATIC_BACKEND_LIBS = $(BACKENDS:%=$(BUILD_DIR)/lib%.a)
 SHARED_BACKEND_LIBS = $(BACKENDS:%=$(BUILD_DIR)/lib%.so)
 
