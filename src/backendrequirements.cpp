@@ -2,13 +2,13 @@
 
 bool BackendCapabilities::meetsRequirements(BackendRequirements requirements) const {
   if(requirements.http != nullptr) {
-    if(*requirements.http != http) {
+    if(!*requirements.http && *requirements.http != http) {
       return false;
     }
   }
 
   if(requirements.https != nullptr) {
-    if(*requirements.https != https) {
+    if(!*requirements.https && *requirements.https != https) {
       return false;
     }
   }
