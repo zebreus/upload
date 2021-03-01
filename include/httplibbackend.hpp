@@ -39,7 +39,7 @@ class HttplibBackend: public Backend {
   void initializeClient(const std::string& userAgent);
   std::string getErrorMessage(httplib::Error error);
   [[nodiscard]] static bool checkMimetype(const File& file, const std::vector<std::string>& blacklist);
-  std::string postForm(const httplib::MultipartFormDataItems& form, const httplib::Headers& headers = {});
+  std::string postForm(const httplib::MultipartFormDataItems& form, const httplib::Headers& headers = {}, const std::string& endpoint = "");
   std::string putFile(const File& file, const httplib::Headers& headers = {});
   static std::vector<std::string> findValidUrls(const std::string& input, const std::string& urlRegex = defaultUrlRegex);
   [[nodiscard]] long long determineRetention(const BackendRequirements& requirements) const;
@@ -244,8 +244,12 @@ inline bool HttplibBackend::checkMimetype(const File& file, const std::vector<st
   return true;
 }
 
-inline std::string HttplibBackend::postForm(const httplib::MultipartFormDataItems& form, const httplib::Headers& headers) {
-  if(auto result = client->Post("/", headers, form)) {
+inline std::string HttplibBackend::postForm(const httplib::MultipartFormDataItems& form,
+                                            const httplib::Headers& headers,
+                                            const std::string& endpoint) {
+  std::string urlExtension = "/";
+  urlExtension.append(endpoint);
+  if(auto result = client->Post(urlExtension.c_str(), headers, form)) {
     logger.log(Logger::Topic::Debug) << "Received response from " << name << " (" << result->status << "): " << result->body << '\n';
     if(result->status != 200) {
       std::stringstream message;
