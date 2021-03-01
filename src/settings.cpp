@@ -77,9 +77,9 @@ cxxopts::Options Settings::generateParser() {
   ("max-retention", "Make sure the file is not kept longer than TIME.", cxxopts::value<std::string>(), "TIME")
   ("min-size", "Only use backend that accept files bigger than BYTES.", cxxopts::value<std::string>(), "BYTES")
   ("autodelete", "Delete the file after NUM downloads.", cxxopts::value<int>()->implicit_value("1"), "NUM")
-  ("min-random-part", "Each url has a random part longer than NUM characters", cxxopts::value<int>(), "NUM")
-  ("max-random-part", "Each url has a random part shorter than NUM characters", cxxopts::value<int>(), "NUM")
-  ("max-url-length", "Each generated url will be shorter than NUM characters.", cxxopts::value<int>(), "NUM")
+  ("min-random", "Each url has a random part longer than NUM characters", cxxopts::value<int>(), "NUM")
+  ("max-random", "Each url has a random part shorter than NUM characters", cxxopts::value<int>(), "NUM")
+  ("m,max-length", "Each generated url will be shorter than NUM characters.", cxxopts::value<int>(), "NUM")
   ;
   options.add_options("Mode independent")
   ("archive-type", "Sets the archive type", cxxopts::value<std::string>()->default_value("1"), "TYPE")
@@ -360,12 +360,12 @@ BackendRequirements Settings::parseBackendRequirements(const auto& parseResult) 
     }
   }
 
-  if(parseResult.count("min-random-part")) {
-    requirements.minRandomPart.reset((new long(parseResult["min-random-part"].template as<int>())));
+  if(parseResult.count("min-random")) {
+    requirements.minRandomPart.reset((new long(parseResult["min-random"].template as<int>())));
   }
 
-  if(parseResult.count("max-random-part")) {
-    requirements.maxRandomPart.reset(new long(parseResult["max-random-part"].template as<int>()));
+  if(parseResult.count("max-random")) {
+    requirements.maxRandomPart.reset(new long(parseResult["max-random"].template as<int>()));
   }
 
   if(requirements.maxRandomPart != nullptr && requirements.minRandomPart != nullptr) {
@@ -387,8 +387,8 @@ BackendRequirements Settings::parseBackendRequirements(const auto& parseResult) 
     requirements.minSize.reset(new unsigned long(minSize));
   }
 
-  if(parseResult.count("max-url-length")) {
-    int maxUrlLength = parseResult["max-url-length"].template as<int>();
+  if(parseResult.count("max-length")) {
+    int maxUrlLength = parseResult["max-length"].template as<int>();
     if(maxUrlLength < 11) {
       logger.log(Logger::Fatal) << "You specified a maximum url length of less than 11 characters (" << maxUrlLength
                                 << "). That does not seem logical, as the shortest url possible is only 11 characters. http:/x.xx/" << '\n';

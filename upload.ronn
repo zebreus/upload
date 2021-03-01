@@ -140,14 +140,14 @@ All letters are converted to lowercase before evaluation.
  * `--autodelete`=[<downloads>] :
    Ensure, that each file gets deleted after <downloads> downloads. If downloads is not specified, it defaults to 1.
 
- * `--min-random-part`=<characters> :
-   Ensure, that each url has a random part of at least <characters> characters.
+ * `--min-random`=<characters> :
+   Ensure, that each url has at least <characters> random characters.
    If the backend does generate a random filename, that is included.
 
- * `--max-random-part`=<characters> :
-   Ensure, that each url has a random part not bigger than <characters> characters.
+ * `--max-random`=<characters> :
+   Ensure, that each url has at most <characters> random characters.
 
- * `--max-url-length`=<characters> :
+ * `-m` <characters>`, --max-length`=<characters> :
    Ensure, that each url is shorter than characters.
    The url length includes the protocol and the filename.
 
