@@ -27,6 +27,7 @@ class HttplibBackend: public Backend {
   static constexpr auto userAgent = "upload/0.0";
   // TODO improve expression
   static constexpr auto urlRegexString = "http[-\\]_.~!*'();:@&=+$,/?%#[A-z0-9]+";
+  static constexpr auto randomCharacter = ' ';
   std::string name;
   std::string url;
   bool useSSL;
@@ -43,6 +44,11 @@ class HttplibBackend: public Backend {
   static std::vector<std::string> findValidUrls(const std::string& input);
   [[nodiscard]] long long determineRetention(const BackendRequirements& requirements) const;
   [[nodiscard]] long determineMaxDownloads(const BackendRequirements& requirements) const;
+  [[nodiscard]] [[maybe_unused]] virtual std::string predictBaseUrl() const;
+  [[nodiscard]] [[maybe_unused]] virtual std::string predictUrl(BackendRequirements requirements, const File& file) const;
+  // Check a possible fullUrl. Random parts in the fullUrl should be replaced with randomCharacter
+  [[nodiscard]] bool checkUrl(const BackendRequirements& requirements, const std::string& fullUrl) const;
+  [[nodiscard]] bool checkUrl(const BackendRequirements& requirements, size_t length, size_t randomPart) const;
 };
 
 inline HttplibBackend::HttplibBackend(bool useSSL, std::string url, std::string name)
@@ -70,7 +76,8 @@ inline std::string HttplibBackend::getName() const {
 }
 
 inline bool HttplibBackend::staticFileCheck(BackendRequirements requirements, const File& file) const {
-  return checkFile(file);
+  const std::string& fullUrl = predictUrl(requirements, file);
+  return checkFile(file) && checkUrl(requirements, fullUrl);
 }
 
 inline bool HttplibBackend::staticSettingsCheck(BackendRequirements requirements) const {
@@ -303,4 +310,58 @@ inline long HttplibBackend::determineMaxDownloads(const BackendRequirements& req
   }
   return maxDownloads;
 }
+
+inline bool HttplibBackend::checkUrl(const BackendRequirements& requirements, const std::string& fullUrl) const {
+  unsigned int randomCharacters = 0;
+  for(char c : fullUrl) {
+    if(c == randomCharacter) {
+      randomCharacters++;
+    }
+  }
+
+  return checkUrl(requirements, fullUrl.size(), randomCharacters);
+}
+
+inline bool HttplibBackend::checkUrl(const BackendRequirements& requirements, size_t length, size_t randomPart) const {
+  if(requirements.minRandomPart) {
+    if(*requirements.minRandomPart > randomPart) {
+      return false;
+    }
+  }
+
+  if(requirements.maxRandomPart) {
+    if(*requirements.maxRandomPart < randomPart) {
+      return false;
+    }
+  }
+
+  if(requirements.maxUrlLength) {
+    if(*requirements.maxUrlLength < length) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+[[maybe_unused]] inline std::string HttplibBackend::predictBaseUrl() const {
+  std::string predictedUrl;
+  if(useSSL) {
+    predictedUrl.append("https://");
+  } else {
+    predictedUrl.append("http://");
+  }
+
+  predictedUrl.append(url);
+  predictedUrl.append("/");
+
+  return predictedUrl;
+}
+
+inline std::string HttplibBackend::predictUrl(BackendRequirements, const File&) const {
+  logger.log(Logger::Debug) << "Called default predictUrl, this should not happen. You should check your backend implementation"
+                            << "\n";
+  return std::string();
+}
+
 #endif

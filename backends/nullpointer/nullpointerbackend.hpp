@@ -22,6 +22,7 @@ class NullPointerBackend: public HttplibBackend {
 
  private:
   [[nodiscard]] long long calculateRetentionPeriod(const File& f) const;
+  [[nodiscard]] std::string predictUrl(BackendRequirements requirements, const File& file) const override;
 };
 
 #endif

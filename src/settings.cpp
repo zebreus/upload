@@ -103,7 +103,8 @@ void Settings::parseOptions(int argc, char** argv) {
     auto result = options.parse(argc, argv);
 
     if(result.count("help")) {
-      logger.log(Logger::Print) << options.help() << std::endl;
+      logger.log(Logger::Print) << options.help({""}) << '\n';
+      logger.log(Logger::Print) << "For more options and details see upload(1)" << std::endl;
       quit::success();
     }
 

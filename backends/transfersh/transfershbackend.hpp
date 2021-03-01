@@ -17,6 +17,9 @@ class TransferShBackend: public HttplibBackend {
                   std::function<void(std::string)> successCallback,
                   std::function<void(std::string)> errorCallback) override;
   static std::vector<Backend*> loadBackends();
+
+ private:
+  [[nodiscard]] std::string predictUrl(BackendRequirements requirements, const File& file) const override;
 };
 
 #endif

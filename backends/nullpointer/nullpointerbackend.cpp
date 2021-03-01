@@ -8,14 +8,15 @@ setBackendType(NullPointerBackend)
   capabilities.preserveName.reset(new bool(false));
   capabilities.minRetention = 30ll * 24 * 60 * 60 * 1000;
   capabilities.maxRetention = 365ll * 24 * 60 * 60 * 1000;
-  capabilities.randomPart = 4;
-  capabilities.randomPartWithRandomFilename = 4;
-  capabilities.urlLength = 14 + (useSSL ? 1 : 0);
-  capabilities.urlLengthWithRandomFilename = 14 + (useSSL ? 1 : 0);
 }
 
 bool NullPointerBackend::staticFileCheck(BackendRequirements requirements, const File& file) const {
   if(!checkFile(file)) {
+    return false;
+  }
+
+  const std::string& predictedUrl = predictUrl(requirements, file);
+  if(!checkUrl(requirements, predictedUrl)) {
     return false;
   }
 
@@ -97,4 +98,13 @@ std::vector<Backend*> NullPointerBackend::loadBackends() {
   }
 
   return backends;
+}
+
+std::string NullPointerBackend::predictUrl(BackendRequirements requirements, const File& file) const {
+  std::string fullUrl = predictBaseUrl();
+  for(int i = 0; i < 4; i++) {
+    fullUrl.push_back(randomCharacter);
+  }
+  fullUrl.append(".ext");
+  return fullUrl;
 }

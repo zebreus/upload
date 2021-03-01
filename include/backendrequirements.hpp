@@ -34,19 +34,8 @@ struct BackendCapabilities {
   // If set, the file can be deleted after a maximum of this many downloads
   // It is assumed, that there is always an option to not delete files
   std::shared_ptr<long> maxDownloads;
-  // TODO Do not check the predicted url here
-  // Length of the random part, if the filename is preserved
-  long randomPart;
-  // Length of the random part, if the filename is not preserved
-  long randomPartWithRandomFilename;
-  // Url length without filename
-  long urlLength;
-  // Url length without filename
-  long urlLengthWithRandomFilename;
 
   bool meetsRequirements(BackendRequirements requirements) const;
-  // Helper to determine wheter to preserve the filename for the given requirements.
-  // If the requirements are not compatible with the capabilities, the result is random
-  bool determinePreserveName(const BackendRequirements& requirements) const;
 };
+
 #endif

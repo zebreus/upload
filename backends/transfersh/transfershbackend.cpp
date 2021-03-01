@@ -9,10 +9,6 @@ setBackendType(TransferShBackend)
   capabilities.minRetention = 1ll * 24 * 60 * 60 * 1000;
   capabilities.maxRetention = 14ll * 24 * 60 * 60 * 1000;
   capabilities.maxDownloads.reset(new long(LONG_MAX));
-  capabilities.randomPart = 5;
-  capabilities.randomPartWithRandomFilename = 5;
-  capabilities.urlLength = 29 + (useSSL ? 1 : 0);
-  capabilities.urlLengthWithRandomFilename = 29 + (useSSL ? 1 : 0);
 }
 
 void TransferShBackend::uploadFile(BackendRequirements requirements,
@@ -68,4 +64,16 @@ std::vector<Backend*> TransferShBackend::loadBackends() {
   }
 
   return backends;
+}
+
+std::string TransferShBackend::predictUrl(BackendRequirements requirements, const File& file) const {
+  // Example: https://transfer.sh/get/akHPk/a.out
+  std::string fullUrl = predictBaseUrl();
+  fullUrl.append("get/");
+  for(int i = 0; i < 5; i++) {
+    fullUrl.push_back(randomCharacter);
+  }
+  fullUrl.append("/");
+  fullUrl.append(file.getName());
+  return fullUrl;
 }

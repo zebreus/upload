@@ -8,10 +8,6 @@ setBackendType(OshiBackend)
   capabilities.minRetention = 1ll * 60 * 1000;
   capabilities.maxRetention = 90ll * 24 * 60 * 60 * 1000;
   capabilities.maxDownloads.reset(new long(1));
-  capabilities.randomPart = 6;
-  capabilities.randomPartWithRandomFilename = 6;
-  capabilities.urlLength = 22 + (useSSL ? 1 : 0);
-  capabilities.urlLengthWithRandomFilename = 21 + (useSSL ? 1 : 0);
 }
 
 void OshiBackend::uploadFile(BackendRequirements requirements,
@@ -49,12 +45,25 @@ std::shared_ptr<httplib::MultipartFormDataItems> OshiBackend::generateFormData(c
     formData->push_back({"autodestroy", "1"});
   }
 
-  if(capabilities.determinePreserveName(requirements)) {
-    formData->push_back({"shorturl", "0"});
-    formData->push_back({"randomizefn", "0"});
-  } else {
-    formData->push_back({"randomizefn", "1"});
-    formData->push_back({"shorturl", "1"});
+  UrlType type = getUrlType(requirements, file);
+  switch(type) {
+    case UrlType::ShortRandom:
+      formData->push_back({"randomizefn", "1"});
+      formData->push_back({"shorturl", "1"});
+      break;
+    case UrlType::LongRandom:
+      formData->push_back({"randomizefn", "1"});
+      formData->push_back({"shorturl", "0"});
+      break;
+    case UrlType::Name:
+      formData->push_back({"randomizefn", "0"});
+      formData->push_back({"shorturl", "0"});
+      break;
+    case UrlType::None:
+    default:
+      logger.log(Logger::Info) << "No valid url type available for uploading to oshi.at. This should not happen, because staticFileCheck "
+                                  "should have failed. Continuing anyway, as it is too late too abort."
+                               << '\n';
   }
 
   return formData;
@@ -78,4 +87,56 @@ std::vector<Backend*> OshiBackend::loadBackends() {
   }
 
   return backends;
+}
+
+OshiBackend::UrlType OshiBackend::getUrlType(BackendRequirements requirements, const File& file) const {
+  // Check if requirements or capabilities specify preserveName
+  bool nameUrlPossible = true;
+  bool shortRandomUrlPossible = true;
+  bool longRandomUrlPossible = true;
+
+  if(requirements.preserveName) {
+    if(*requirements.preserveName) {
+      shortRandomUrlPossible = false;
+      longRandomUrlPossible = false;
+    } else {
+      nameUrlPossible = false;
+    }
+  }
+
+  size_t baseUrlLength = predictBaseUrl().size();
+
+  size_t shortRandomPart = 6;
+  size_t longRandomPart = 12;
+
+  size_t shortRandomUrlLength = baseUrlLength + shortRandomPart;
+  size_t longRandomUrlLength = baseUrlLength + longRandomPart + 1;  //+1 = separator in the middle
+  size_t nameUrlLength = baseUrlLength + shortRandomPart + 1 + file.getName().size();
+
+  if(shortRandomUrlPossible) {
+    shortRandomUrlPossible = checkUrl(requirements, shortRandomUrlLength, shortRandomPart);
+  }
+
+  if(longRandomUrlPossible) {
+    longRandomUrlPossible = checkUrl(requirements, longRandomUrlLength, longRandomPart);
+  }
+
+  if(nameUrlPossible) {
+    nameUrlPossible = checkUrl(requirements, nameUrlLength, shortRandomPart);
+  }
+
+  if(nameUrlPossible) {
+    return UrlType::Name;
+  } else if(shortRandomUrlPossible) {
+    return UrlType::ShortRandom;
+  } else if(longRandomUrlPossible) {
+    return UrlType::LongRandom;
+  } else {
+    return UrlType::None;
+  }
+}
+
+bool OshiBackend::staticFileCheck(BackendRequirements requirements, const File& file) const {
+  UrlType type = getUrlType(requirements, file);
+  return checkFile(file) && type != UrlType::None;
 }
