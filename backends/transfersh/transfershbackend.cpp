@@ -50,17 +50,17 @@ std::vector<Backend*> TransferShBackend::loadBackends() {
   std::vector<Backend*> backends;
 
   try {
-    Backend* httpBackend = new TransferShBackend(false, "transfer.sh", "transfer.sh (HTTP)");
-    backends.push_back(httpBackend);
-  } catch(std::invalid_argument& e) {
-    logger.log(Logger::Info) << "Failed to load TransferShBackend (http):" << e.what() << "\n";
-  }
-
-  try {
     Backend* httpsBackend = new TransferShBackend(true, "transfer.sh", "transfer.sh");
     backends.push_back(httpsBackend);
   } catch(std::invalid_argument& e) {
     logger.log(Logger::Info) << "Failed to load TransferShBackend (https):" << e.what() << "\n";
+  }
+
+  try {
+    Backend* httpBackend = new TransferShBackend(false, "transfer.sh", "transfer.sh (HTTP)");
+    backends.push_back(httpBackend);
+  } catch(std::invalid_argument& e) {
+    logger.log(Logger::Info) << "Failed to load TransferShBackend (http):" << e.what() << "\n";
   }
 
   return backends;

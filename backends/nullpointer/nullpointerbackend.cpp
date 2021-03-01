@@ -84,17 +84,17 @@ std::vector<Backend*> NullPointerBackend::loadBackends() {
   std::vector<Backend*> backends;
 
   try {
-    Backend* httpBackend = new NullPointerBackend(false, "0x0.st", "THE NULL POINTER (HTTP)");
-    backends.push_back(httpBackend);
-  } catch(std::invalid_argument& e) {
-    logger.log(Logger::Info) << "Failed to load NullPointerBackend (http):" << e.what() << "\n";
-  }
-
-  try {
     Backend* httpsBackend = new NullPointerBackend(true, "0x0.st", "THE NULL POINTER");
     backends.push_back(httpsBackend);
   } catch(std::invalid_argument& e) {
     logger.log(Logger::Info) << "Failed to load NullPointerBackend (https):" << e.what() << "\n";
+  }
+
+  try {
+    Backend* httpBackend = new NullPointerBackend(false, "0x0.st", "THE NULL POINTER (HTTP)");
+    backends.push_back(httpBackend);
+  } catch(std::invalid_argument& e) {
+    logger.log(Logger::Info) << "Failed to load NullPointerBackend (http):" << e.what() << "\n";
   }
 
   return backends;

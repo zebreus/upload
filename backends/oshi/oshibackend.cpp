@@ -73,17 +73,17 @@ std::vector<Backend*> OshiBackend::loadBackends() {
   std::vector<Backend*> backends;
 
   try {
-    Backend* httpBackend = new OshiBackend(false, "oshi.at", "oshi (HTTP)");
-    backends.push_back(httpBackend);
-  } catch(std::invalid_argument& e) {
-    logger.log(Logger::Info) << "Failed to load oshi (HTTP):" << e.what() << "\n";
-  }
-
-  try {
     Backend* httpsBackend = new OshiBackend(true, "oshi.at", "oshi");
     backends.push_back(httpsBackend);
   } catch(std::invalid_argument& e) {
     logger.log(Logger::Info) << "Failed to load oshi (https):" << e.what() << "\n";
+  }
+
+  try {
+    Backend* httpBackend = new OshiBackend(false, "oshi.at", "oshi (HTTP)");
+    backends.push_back(httpBackend);
+  } catch(std::invalid_argument& e) {
+    logger.log(Logger::Info) << "Failed to load oshi (HTTP):" << e.what() << "\n";
   }
 
   return backends;
