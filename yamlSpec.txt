@@ -1,0 +1,40 @@
+Backend properties
+
+replacements: 
+${FILENAME}
+${CONTENT}
+${URL}
+${RETENTION} (in retention unit)
+
+
+name
+host
+protocol
+speedRating (some number roughly indicating the speed in comparison to other ones)
+  method
+  multipart-fields
+    name: content
+  headers
+    name: content
+  queryString
+    name: content
+  endpoint (everything after the url)
+  userAgent
+  
+  resultRegex (match url in output)
+  resultGroup (capture group in output)
+  
+  preservesName
+  expectedUrl (placeholders for random parts)
+  expectedUrlRandomness (bits of true randomness (not counting up))
+  canAccessWithoutFilename (files can be found without the filename)
+  choosableRetention (false = random time between min and max)
+  retentionSteps (steps in which the retention is set)
+  minRetention
+  maxRetention
+  mimetypeWhitelist
+  mimetypeBlacklist
+  maxFilesize
+  autodelete
+    minAutodeleteCount (0 = no autodelete)
+    maxAutodeleteCount
