@@ -1,0 +1,6 @@
+# Build dir
+build/*
+
+# IDE files
+.idea
+*.geany
