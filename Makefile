@@ -4,6 +4,11 @@ STATIC_BUILD_DIR := build-static
 LIB_DIR := libs
 SRC_DIR := src
 
+DESTDIR ?= ${out}
+SOURCE_DATE_EPOCH ?= $(shell date +%s)
+BUILD_DATE_EPOCH := @${SOURCE_DATE_EPOCH}
+BUILD_DATE := $(shell date --date=${BUILD_DATE_EPOCH} +'%Y-%m-%d')
+
 ifeq ($(OS),Windows_NT)
 	PLATFORM := Windows
 else
@@ -125,7 +130,7 @@ format:
 manual: upload.1
 
 upload.1: upload.ronn
-	ronn upload.ronn --roff
+	ronn upload.ronn --date=${BUILD_DATE} --roff
 
 ## Section for optaining header with cert bundle data
 
@@ -139,6 +144,13 @@ include/cacert.hpp: cacert.pem generator
 	./generator cacert.pem cacert.hpp
 	mv cacert.hpp include
 
+install: $(BUILD_DIR)/$(UPLOAD) upload.1
+	mkdir -p ${DESTDIR}/bin
+	install -m 755 $(BUILD_DIR)/$(UPLOAD) ${DESTDIR}/bin
+
+	mkdir -p ${DESTDIR}/share/man/man1
+	install -m 755 upload.1 ${DESTDIR}/share/man/man1
+
 ## Section for generating compressed and stripped release binary
 
 release: include/cacert.hpp upload
@@ -147,3 +159,6 @@ upload: $(STATIC_BUILD_DIR)/$(UPLOAD)
 	cp $(STATIC_BUILD_DIR)/$(UPLOAD) upload
 	strip upload
 	upx --lzma upload
+
+
+

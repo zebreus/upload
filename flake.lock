@@ -1,0 +1,95 @@
+{
+  "nodes": {
+    "cpp-httplib": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1613594216,
+        "narHash": "sha256-36+OCiw05oKO7FY9Qu68leAvpdmIS+WEzWuwYdoCvjI=",
+        "ref": "refs/heads/master",
+        "rev": "ff813bf99d3402adafd4141b660ed2313d27f7a6",
+        "revCount": 903,
+        "type": "git",
+        "url": "https://github.com/yhirose/cpp-httplib.git"
+      },
+      "original": {
+        "rev": "ff813bf99d3402adafd4141b660ed2313d27f7a6",
+        "type": "git",
+        "url": "https://github.com/yhirose/cpp-httplib.git"
+      }
+    },
+    "cxxopts": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1613338486,
+        "narHash": "sha256-6NwdV6wGjI3LEBEZq24qtod9Ct8XBFvYAw22iO+K4Uo=",
+        "rev": "aaa5e790b6b5b4c9de0b1ca3346ed0c2e55e4e03",
+        "revCount": 321,
+        "type": "git",
+        "url": "https://github.com/jarro2783/cxxopts.git"
+      },
+      "original": {
+        "rev": "aaa5e790b6b5b4c9de0b1ca3346ed0c2e55e4e03",
+        "type": "git",
+        "url": "https://github.com/jarro2783/cxxopts.git"
+      }
+    },
+    "flake-utils": {
+      "locked": {
+        "lastModified": 1667395993,
+        "narHash": "sha256-nuEHfE/LcWyuSWnS8t12N1wc105Qtau+/OdUAjtQ0rA=",
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "rev": "5aed5285a952e0b949eb3ba02c12fa4fcfef535f",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "type": "github"
+      }
+    },
+    "miniz-cpp": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1614166620,
+        "narHash": "sha256-IcWwQC5iyO1Twwc+EW0ON+KczIpIbgSEafBiVkWWUwA=",
+        "ref": "refs/heads/master",
+        "rev": "5a7a6b2aae35cdd5aecb38b9fb51efd9178dd510",
+        "revCount": 14,
+        "type": "git",
+        "url": "https://github.com/Zebreus/miniz-cpp.git"
+      },
+      "original": {
+        "rev": "5a7a6b2aae35cdd5aecb38b9fb51efd9178dd510",
+        "type": "git",
+        "url": "https://github.com/Zebreus/miniz-cpp.git"
+      }
+    },
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1659446231,
+        "narHash": "sha256-hekabNdTdgR/iLsgce5TGWmfIDZ86qjPhxDg/8TlzhE=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "eabc38219184cc3e04a974fe31857d8e0eac098d",
+        "type": "github"
+      },
+      "original": {
+        "id": "nixpkgs",
+        "ref": "nixos-21.11",
+        "type": "indirect"
+      }
+    },
+    "root": {
+      "inputs": {
+        "cpp-httplib": "cpp-httplib",
+        "cxxopts": "cxxopts",
+        "flake-utils": "flake-utils",
+        "miniz-cpp": "miniz-cpp",
+        "nixpkgs": "nixpkgs"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}
