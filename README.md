@@ -1,14 +1,68 @@
-upload -- upload files to the internet
-=========================================
+upload
+======
 
-## SYNOPSIS
+**upload** uploads files to the internet and generates a download link.
+
+## Installation
+
+Use the following command to download and run **upload** using the nix package manager.
+
+```bash
+nix run github:zebreus/upload
+```
+
+A [static binary](https://github.com/zebreus/upload/releases/download/v0.2/upload.binary) is available in the latest github release. 
+
+```bash
+# Download the static binary into /usr/bin. This should work on any distribution.
+sudo wget https://github.com/zebreus/upload/releases/download/v0.2/upload.binary -O /usr/bin/upload
+sudo chmod +x /usr/bin/upload
+```
+
+**upload** is also packaged on the [AUR](https://aur.archlinux.org/packages/upload).
+
+
+## Examples
+
+Upload a file named file.txt
+
+```console
+$ upload file.txt
+http://somefilehost.tld/file.txt
+```
+
+Upload multiple files as an archive
+
+```console
+$ upload file1.txt file2.txt
+http://somefilehost.tld/upload.zip
+```
+
+Upload multiple files individually
+
+```console
+$ upload -i file1.txt file2.txt
+http://somefilehost.tld/file1.txt
+http://somefilehost.tld/file2.txt
+```
+
+Find all cpp files and upload them as an archive
+
+```console
+$ find . -name "*.cpp" | upload -a
+http://somefilehost.tld/sources.zip
+```
+
+## Manual
+
+### SYNOPSIS
 
 `upload` [<var>options</var>...] <var>file</var><br>
 `upload` [<var>options</var>...] <var>file</var>...<br>
 `upload` [<var>backend-selection-options</var>...] `-l`|`--list`<br>
 `upload` `-h`|`--help`
 
-## DESCRIPTION
+### DESCRIPTION
 
 **upload** uploads files to the internet and prints a http(s) url, where you can download them.
 
@@ -53,7 +107,7 @@ All letters are converted to lowercase before evaluation.
 `GiB`/`G` for Gibibyte(2^30).
 All letters are converted to lowercase before evaluation.
 
-## OPTIONS
+### OPTIONS
 
  * `-h`, `--help` :
    Displays the help screen.
@@ -75,7 +129,7 @@ All letters are converted to lowercase before evaluation.
  * `-l`, `--list` :
    List all available upload backends for the current request, ordered by preference and exit without uploading anything.
 
-### Mode independend options apply in archive and in individual mode.
+#### Mode independend options apply in archive and in individual mode.
 
 
  * `--archive-type`=_zip_ :
@@ -91,7 +145,7 @@ All letters are converted to lowercase before evaluation.
    This is the default setting in individual mode.
    Mutually exclusive with `-r`/`--root-archive.
 
-### Backend selection options. Specify some requirements that the backend must meet.
+#### Backend selection options. Specify some requirements that the backend must meet.
 
 
  * `-b` <var>backend</var>, `--backend`=<var>backend</var> :
@@ -131,19 +185,19 @@ All letters are converted to lowercase before evaluation.
  * `--max-url-length`=<var>characters</var> :
    Ensure, that each url is shorter than characters.
 
-### Indivial mode options. They are only used in individual mode.
+#### Indivial mode options. They are only used in individual mode.
 
 
  * `-c`, `--continue` :
    Do not abort if the upload of a file failed.
 
-### Archive mode options. They are only used in archive mode.
+#### Archive mode options. They are only used in archive mode.
 
 
  * `-n`, `--name` :
    The name of the created archive. By default the name will be randomly generated.
 
-## BACKEND SELECTION 
+### BACKEND SELECTION 
 
 First a ordered list of possible backends is generated, by default this includes all known backends and is ordered randomly. You can also set the list manually by using `-b`/`--backend`.
  
@@ -151,7 +205,7 @@ Then backends that do not meet the requirements are discarded. You can set the r
 
 Then an attempt is made to upload the files to the first backend, if the upload finished and an url was generated, the url is printed and **upload** exits 0. If uploading the file failed, the next backend is used. When no backends remain the program exits 1.
 
-## EXAMPLES
+### EXAMPLES
 
 Upload a file named file.txt
 
@@ -174,7 +228,7 @@ Find all cpp files and upload them as an archive
     $ find . -name "*.cpp" | upload -a
     http://somefilehost.tld/sources.zip
 
-## PRIVACY AND SECURITY
+### PRIVACY AND SECURITY
 
 Your files are uploaded to a random server of some random internet person.
 
@@ -184,7 +238,7 @@ There is no guarantee, that your files are in any way private.
 
 There is no guarantee for anything, btw.
 
-## EXITCODES
+### EXITCODES
 0
 
    Success.
@@ -209,20 +263,20 @@ There is no guarantee for anything, btw.
 
    Unable to read one or more input files/directories.
 
-## BUGS
+### BUGS
 
 **Yes**, probably a lot.
 
 If you find one, it would be nice, if you could open an issue on github <https://github.com/Zebreus/upload/issues>.
 
-## COPYRIGHT
+### COPYRIGHT
 
-**Upload** is copyright (C) 2021 Lennart Eichhorn.
+**Upload** is copyright (C) 2022 .
 License GPLv3. GNU GPL version 3 <https://gnu.org/licenses/gpl.html>.
 This is free software: you are free  to  change  and  redistribute  it.
 There is NO WARRANTY, to the extent permitted by law.
 
-## SEE ALSO
+### SEE ALSO
 
 man(1)
 
