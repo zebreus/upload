@@ -36,8 +36,6 @@
             src = ./.;
 
             nativeBuildInputs = [
-              # upx
-              # clang-tools
               ronn
             ];
 
@@ -46,17 +44,14 @@
             ];
 
             patchPhase = ''
-              ls libs -a
-              rm -rf libs/cxxopts
-              rm -rf libs/miniz-cpp
-              rm -rf libs/cpp-httplib
-              ls libs -a
               # Start inserting submodule softlinks here
+              rm -rf libs/cxxopts
               ln -s ${cxxopts} libs/cxxopts
+              rm -rf libs/miniz-cpp
               ln -s ${miniz-cpp} libs/miniz-cpp
+              rm -rf libs/cpp-httplib
               ln -s ${cpp-httplib} libs/cpp-httplib
               # Stop inserting submodule softlinks here
-              ls libs -a
             '';
 
             buildPhase = ''
