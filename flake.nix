@@ -46,11 +46,17 @@
             ];
 
             patchPhase = ''
+              ls libs -a
+              rm -rf libs/cxxopts
+              rm -rf libs/miniz-cpp
+              rm -rf libs/cpp-httplib
+              ls libs -a
               # Start inserting submodule softlinks here
               ln -s ${cxxopts} libs/cxxopts
               ln -s ${miniz-cpp} libs/miniz-cpp
               ln -s ${cpp-httplib} libs/cpp-httplib
               # Stop inserting submodule softlinks here
+              ls libs -a
             '';
 
             buildPhase = ''
