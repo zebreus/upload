@@ -33,7 +33,7 @@
         packages.default = (with nixpkgs.legacyPackages.${system};
           stdenv.mkDerivation {
             pname = name;
-            version = "0.3.1";
+            version = "0.3.2";
             src = ./.;
 
             nativeBuildInputs = [
@@ -56,7 +56,7 @@
             '';
 
             buildPhase = ''
-              export SOURCE_DATE_EPOCH="${toString self.lastModified}"
+              export SOURCE_DATE_EPOCH="${toString (self.lastModified or 0)}"
               make
             '';
           });
