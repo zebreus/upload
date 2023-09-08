@@ -2,7 +2,7 @@
   description = "Upload files to the internet";
 
   inputs = {
-    nixpkgs.url = "nixpkgs/nixos-21.11";
+    nixpkgs.url = "github:nixos/nixpkgs";
     flake-utils.url = "github:numtide/flake-utils";
     # Start inserting submodules as inputs here
     cxxopts = {
@@ -32,7 +32,8 @@
         name = "upload";
         packages.default = (with nixpkgs.legacyPackages.${system};
           stdenv.mkDerivation {
-            name = name;
+            pname = name;
+            version = "0.3.1";
             src = ./.;
 
             nativeBuildInputs = [
